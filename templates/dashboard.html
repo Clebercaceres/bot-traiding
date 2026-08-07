@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TradeBot · Bridge Markets</title>
+<style>
+/* ─── Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --r: 10px;
+  --r-lg: 14px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+}
+[data-theme="light"] {
+  --bg:       #eef0f6;
+  --canvas:   #f7f8fc;
+  --card:     #ffffff;
+  --card2:    #f3f4f9;
+  --border:   #e0e3ef;
+  --border2:  #d0d4e6;
+  --txt:      #111827;
+  --txt2:     #5b6480;
+  --txt3:     #9ba3be;
+  --accent:   #5046e4;
+  --accent2:  #3d35c0;
+  --accentBg: #eeedfb;
+  --green:    #0ea55d;
+  --greenBg:  #d4f5e5;
+  --red:      #e0362b;
+  --redBg:    #fde8e7;
+  --amber:    #c07c00;
+  --amberBg:  #fef3d0;
+  --blue:     #1d6ef5;
+  --blueBg:   #dfeaff;
+  --shadow:   0 1px 3px rgba(16,24,64,.07), 0 1px 2px rgba(16,24,64,.04);
+  --shadow2:  0 4px 16px rgba(16,24,64,.10);
+  --shadow3:  0 8px 32px rgba(16,24,64,.14);
+}
+[data-theme="dark"] {
+  --bg:       #0b0d14;
+  --canvas:   #0f1120;
+  --card:     #181b2e;
+  --card2:    #1e2236;
+  --border:   #272b44;
+  --border2:  #313659;
+  --txt:      #e4e8f7;
+  --txt2:     #8b93b8;
+  --txt3:     #505878;
+  --accent:   #6e63f5;
+  --accent2:  #5046e4;
+  --accentBg: #1e1d42;
+  --green:    #23d47e;
+  --greenBg:  #0a2e1c;
+  --red:      #f5524a;
+  --redBg:    #2d0f0d;
+  --amber:    #f5c34a;
+  --amberBg:  #2d1f00;
+  --blue:     #5897fa;
+  --blueBg:   #0d1e40;
+  --shadow:   0 1px 3px rgba(0,0,0,.3);
+  --shadow2:  0 4px 16px rgba(0,0,0,.4);
+  --shadow3:  0 8px 32px rgba(0,0,0,.55);
+}
+
+/* ─── Reset ──────────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);font-size:14px;
+     line-height:1.5;min-height:100vh;transition:background .2s,color .2s}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+input{font-family:inherit;outline:none}
+a{color:inherit;text-decoration:none}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ─── Nav ────────────────────────────────────────────────────────────── */
+nav{
+  background:var(--card);border-bottom:1px solid var(--border);
+  padding:0 16px;display:flex;align-items:center;gap:4px;
+  height:52px;position:sticky;top:0;z-index:200;
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.logo{display:flex;align-items:center;gap:8px;margin-right:12px;flex-shrink:0}
+.logo-icon{width:30px;height:30px;background:var(--accent);border-radius:8px;
+           display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.logo-text{font-weight:800;font-size:14px;color:var(--txt);letter-spacing:-.3px;white-space:nowrap}
+.logo-text span{font-weight:400;font-size:11px;color:var(--txt3);display:block;margin-top:-2px}
+@media(max-width:480px){.logo-text span{display:none}}
+.nav-tabs{display:flex;gap:2px;flex:1;overflow:hidden}
+.t{padding:5px 11px;border-radius:7px;background:transparent;color:var(--txt2);
+   font-size:13px;font-weight:500;transition:all .15s;border:none;white-space:nowrap;flex-shrink:0}
+.t:hover{background:var(--card2);color:var(--txt)}
+.t.on{background:var(--accentBg);color:var(--accent);font-weight:700}
+@media(max-width:420px){.t{font-size:12px;padding:5px 9px}}
+.nav-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
+.ico-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);
+         background:var(--card2);color:var(--txt);display:flex;align-items:center;
+         justify-content:center;font-size:16px;transition:all .15s}
+.ico-btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.push-dot{width:7px;height:7px;border-radius:50%;background:var(--txt3);
+           display:inline-block;margin-left:4px;vertical-align:middle;transition:background .3s}
+.push-dot.on{background:var(--green);box-shadow:0 0 0 3px var(--greenBg)}
+
+/* ─── Layout ─────────────────────────────────────────────────────────── */
+main{max-width:1080px;margin:0 auto;padding:20px 16px}
+@media(max-width:420px){main{padding:14px 12px}}
+.panel{display:none}.panel.on{display:block}
+
+/* ─── Chip / Badge ───────────────────────────────────────────────────── */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;
+      font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.chip.buy{background:var(--greenBg);color:var(--green)}
+.chip.sell{background:var(--redBg);color:var(--red)}
+.chip.auto{background:var(--blueBg);color:var(--blue)}
+.chip.manual{background:var(--amberBg);color:var(--amber)}
+.chip.ok{background:var(--greenBg);color:var(--green)}
+.chip.stopped{background:var(--redBg);color:var(--red)}
+.chip.analysis{background:var(--amberBg);color:var(--amber)}
+.chip.off{background:var(--card2);color:var(--txt3);border:1px solid var(--border)}
+
+/* ─── Pulse dot ──────────────────────────────────────────────────────── */
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:all .3s}
+.dot.green{background:var(--green)}
+.dot.green.pulse{animation:pulse-green 2s infinite}
+.dot.amber{background:var(--amber)}
+.dot.amber.pulse{animation:pulse-amber 2s infinite}
+.dot.grey{background:var(--txt3)}
+@keyframes pulse-green{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 40%,transparent)}50%{box-shadow:0 0 0 6px transparent}}
+@keyframes pulse-amber{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--amber) 40%,transparent)}50%{box-shadow:0 0 0 6px transparent}}
+
+/* ─── Stat grid ──────────────────────────────────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:24px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);
+    padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;inset:0 0 auto;height:3px;background:var(--accent);border-radius:var(--r-lg) var(--r-lg) 0 0;opacity:0;transition:opacity .3s}
+.sc:hover::before{opacity:1}
+.sc-lbl{font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;
+        font-weight:700;margin-bottom:8px}
+.sc-val{font-size:24px;font-weight:800;letter-spacing:-.5px;color:var(--txt)}
+.sc-val.g{color:var(--green)}.sc-val.r{color:var(--red)}
+.sc-sub{font-size:11px;color:var(--txt3);margin-top:4px}
+
+/* ─── Section label ──────────────────────────────────────────────────── */
+.sec{font-size:11px;font-weight:800;color:var(--txt3);text-transform:uppercase;
+     letter-spacing:.8px;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ─── Signal cards ───────────────────────────────────────────────────── */
+.sig-list{display:flex;flex-direction:column;gap:10px}
+.sig-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);
+          padding:18px 20px;box-shadow:var(--shadow);display:grid;
+          grid-template-columns:1fr auto;gap:16px;align-items:center;
+          transition:border-color .15s,box-shadow .15s}
+.sig-card:hover{border-color:var(--border2);box-shadow:var(--shadow2)}
+.sig-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sig-sym{font-weight:800;font-size:15px;letter-spacing:-.2px}
+.sig-ts{font-size:11px;color:var(--txt3);margin-left:auto}
+.sig-prices{display:flex;gap:20px;flex-wrap:wrap}
+.pi{display:flex;flex-direction:column;gap:2px}
+.pi .pl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.pi .pv{font-size:15px;font-weight:700}
+.pi .pv.sl{color:var(--red)}.pi .pv.tp{color:var(--green)}
+.sig-meta{font-size:12px;color:var(--txt2);margin-top:10px;
+          padding-top:10px;border-top:1px solid var(--border)}
+.sig-actions{display:flex;flex-direction:column;gap:8px}
+
+/* ─── Buttons ────────────────────────────────────────────────────────── */
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;
+     transition:all .15s;border:1.5px solid transparent;white-space:nowrap}
+.btn-accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-accent:hover{background:var(--accent2);border-color:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 35%,transparent)}
+.btn-ghost{background:transparent;color:var(--txt2);border-color:var(--border2)}
+.btn-ghost:hover{background:var(--card2);color:var(--txt);border-color:var(--border2)}
+.btn-green{background:var(--greenBg);color:var(--green);border-color:var(--green)}
+.btn-green:hover{background:var(--green);color:#fff}
+.btn-red{background:var(--redBg);color:var(--red);border-color:var(--red)}
+.btn-red:hover{background:var(--red);color:#fff}
+.btn-blue{background:var(--blueBg);color:var(--blue);border-color:var(--blue)}
+.btn-blue:hover{background:var(--blue);color:#fff}
+.btn-amber{background:var(--amberBg);color:var(--amber);border-color:var(--amber)}
+.btn-amber:hover{background:var(--amber);color:#fff}
+.btn-full{width:100%}
+.btn-pair{display:flex;gap:8px}
+.btn-pair .btn{flex:1}
+.btn-lg{padding:12px 20px;font-size:14px}
+.btn-sm{padding:6px 12px;font-size:12px}
+
+/* ─── Cards ──────────────────────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);
+      padding:22px;box-shadow:var(--shadow)}
+.card h3{font-size:14px;font-weight:800;margin-bottom:4px;letter-spacing:-.2px}
+.card .sub{font-size:12px;color:var(--txt2);margin-bottom:18px;line-height:1.5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+
+/* ─── Status bar ─────────────────────────────────────────────────────── */
+.status-bar{display:flex;align-items:center;gap:12px;padding:14px 18px;
+            background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);
+            box-shadow:var(--shadow);margin-bottom:16px}
+.sb-text{flex:1}
+.sb-title{font-weight:800;font-size:14px}
+.sb-sub{font-size:12px;color:var(--txt2);margin-top:2px}
+.sb-right{display:flex;align-items:center;gap:8px}
+
+/* ─── Form ───────────────────────────────────────────────────────────── */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field label{font-size:11px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.field input{padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);
+             background:var(--card2);color:var(--txt);font-size:14px;transition:border .15s}
+.field input:focus{border-color:var(--accent);background:var(--card)}
+.hours-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:520px){.hours-grid{grid-template-columns:1fr 1fr}
+  .hours-grid .field:last-child{grid-column:1/-1}}
+.hours-hint{font-size:12px;color:var(--txt2);margin-top:10px;padding:10px 14px;
+            background:var(--blueBg);border-radius:8px;border:1px solid var(--blue);
+            color:var(--blue);line-height:1.6}
+
+/* ─── Report ─────────────────────────────────────────────────────────── */
+.toggle-row{display:flex;gap:6px;margin-bottom:18px}
+.tog{padding:6px 18px;border-radius:99px;border:1.5px solid var(--border);
+     background:var(--card);color:var(--txt2);font-size:13px;font-weight:600;
+     cursor:pointer;transition:all .15s}
+.tog.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.rep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
+.rc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+    padding:14px 16px;box-shadow:var(--shadow)}
+.rc .rl{font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:6px}
+.rc .rv{font-size:20px;font-weight:800}
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);
+          overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse}
+th{padding:11px 16px;font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;
+   letter-spacing:.5px;background:var(--card2);border-bottom:1px solid var(--border);text-align:left}
+td{padding:11px 16px;font-size:13px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--card2)}
+
+/* ─── Empty state ────────────────────────────────────────────────────── */
+.empty{text-align:center;padding:48px 24px;background:var(--card);
+       border:1.5px dashed var(--border2);border-radius:var(--r-lg);color:var(--txt3)}
+.empty .ei{font-size:36px;margin-bottom:10px}
+.empty .et{font-size:14px;font-weight:600}
+.empty .es{font-size:12px;margin-top:4px}
+
+/* ─── Connection info ────────────────────────────────────────────────── */
+.conn-box{padding:14px 16px;background:var(--greenBg);border:1.5px solid var(--green);
+          border-radius:var(--r);margin-bottom:14px}
+.conn-name{font-weight:800;font-size:15px;color:var(--green);margin-bottom:3px}
+.conn-detail{font-size:12px;color:var(--txt2)}
+
+/* ─── Onboarding wizard ──────────────────────────────────────────────── */
+#wizard-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);
+                z-index:1000;display:flex;align-items:center;justify-content:center;
+                padding:16px;overflow-y:auto}
+.wizard{background:var(--card);border-radius:18px;width:100%;max-width:500px;
+        box-shadow:var(--shadow3);overflow:hidden;margin:auto}
+.wiz-header{padding:24px 24px 0;text-align:center}
+.wiz-logo{width:48px;height:48px;background:var(--accent);border-radius:12px;
+           display:flex;align-items:center;justify-content:center;font-size:22px;
+           margin:0 auto 12px}
+.wiz-title{font-size:20px;font-weight:900;letter-spacing:-.4px;margin-bottom:5px}
+.wiz-sub{font-size:13px;color:var(--txt2);line-height:1.5}
+.wiz-steps{display:flex;justify-content:center;gap:6px;padding:16px 24px 0}
+.ws{width:28px;height:4px;border-radius:99px;background:var(--border);transition:all .3s}
+.ws.done{background:var(--green)}.ws.active{background:var(--accent)}
+.wiz-body{padding:20px 24px 28px}
+.wiz-step{display:none}.wiz-step.on{display:block}
+.wiz-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.wiz-actions .btn{flex:1 1 120px;min-width:0;text-align:center}
+.wiz-skip{background:none;border:none;color:var(--txt3);font-size:13px;
+          cursor:pointer;text-decoration:underline;margin-top:10px;display:block;
+          text-align:center;width:100%}
+/* Modo selection cards */
+.mode-card{width:100%;padding:14px 16px;text-align:left;border-radius:10px;
+           border:2px solid var(--border);background:var(--card2);
+           transition:all .2s;cursor:pointer;margin-bottom:8px;display:block}
+.mode-card:last-of-type{margin-bottom:0}
+.mode-card:hover{border-color:var(--border2);background:var(--card)}
+.mode-card.selected{border-color:var(--accent);background:var(--accentBg)}
+.mode-card .mc-title{font-weight:800;font-size:14px;margin-bottom:3px}
+.mode-card .mc-desc{font-size:12px;color:var(--txt2);line-height:1.5}
+
+/* ─── Toast ──────────────────────────────────────────────────────────── */
+#toast{position:fixed;bottom:24px;right:24px;padding:13px 20px;border-radius:10px;
+       background:var(--card);border:1.5px solid var(--border);box-shadow:var(--shadow3);
+       font-size:13px;font-weight:600;opacity:0;transition:opacity .3s,transform .3s;
+       pointer-events:none;z-index:9999;max-width:320px;transform:translateY(8px)}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.g{border-color:var(--green);color:var(--green)}
+#toast.r{border-color:var(--red);color:var(--red)}
+#toast.b{border-color:var(--blue);color:var(--blue)}
+</style>
+</head>
+<body>
+
+<!-- ═══ ONBOARDING WIZARD ═══════════════════════════════════════════════════ -->
+<div id="wizard-overlay">
+<div class="wizard">
+  <div class="wiz-header">
+    <div class="wiz-logo">📈</div>
+    <div class="wiz-title">Bienvenido a TradeBot</div>
+    <div class="wiz-sub">Configuración inicial en 3 pasos — menos de 2 minutos</div>
+  </div>
+  <div class="wiz-steps">
+    <div class="ws active" id="ws1"></div>
+    <div class="ws" id="ws2"></div>
+    <div class="ws" id="ws3"></div>
+  </div>
+  <div class="wiz-body">
+
+    <!-- Paso 1: Cuenta MT5 -->
+    <div class="wiz-step on" id="wstep1">
+      <div class="sec" style="margin-top:0">Paso 1 · Conecta tu cuenta MT5</div>
+      <div class="field">
+        <label>Login (número de cuenta)</label>
+        <input type="number" id="wf-login" placeholder="Ej: 7916999"/>
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="wf-pass" placeholder="••••••"/>
+      </div>
+      <div class="field">
+        <label>Servidor</label>
+        <input type="text" id="wf-server" placeholder="BridgeMarkets-MT5"/>
+      </div>
+      <div class="wiz-actions">
+        <button class="btn btn-accent btn-lg btn-full" onclick="wizConnect()">Conectar y continuar →</button>
+      </div>
+      <button class="wiz-skip" onclick="wizSkip(1)">Saltar por ahora (configurar después)</button>
+    </div>
+
+    <!-- Paso 2: Modo de operación -->
+    <div class="wiz-step" id="wstep2">
+      <div class="sec" style="margin-top:0">Paso 2 · ¿Cómo quieres operar?</div>
+      <button class="mode-card" id="wmode-auto" onclick="wizSetMode('auto')">
+        <div class="mc-title">⏰ Automático por horario</div>
+        <div class="mc-desc">El bot estudia y opera según los horarios que configures. Ideal para no estar pendiente.</div>
+      </button>
+      <button class="mode-card" id="wmode-manual" onclick="wizSetMode('manual')">
+        <div class="mc-title">🎮 Control manual</div>
+        <div class="mc-desc">Tú decides cuándo inicia el análisis y cuándo busca señales desde el dashboard.</div>
+      </button>
+      <div id="wiz-hours-section" style="display:none;margin-top:14px">
+        <div class="hours-grid">
+          <div class="field" style="margin-bottom:0">
+            <label>Inicio análisis</label>
+            <input type="number" id="wh-a" min="0" max="23" placeholder="15" value="15"/>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Inicio trading</label>
+            <input type="number" id="wh-t" min="0" max="23" placeholder="20" value="20"/>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Fin trading</label>
+            <input type="number" id="wh-e" min="1" max="24" placeholder="24" value="24"/>
+          </div>
+        </div>
+        <div class="hours-hint" id="wiz-hours-hint" style="margin-top:10px">
+          Análisis: <b>15:00 → 20:00</b> &nbsp;|&nbsp; Trading: <b>20:00 → 00:00</b>
+        </div>
+      </div>
+      <div class="wiz-actions">
+        <button class="btn btn-ghost" onclick="wizBack(2)">← Atrás</button>
+        <button class="btn btn-accent" style="flex:2" onclick="wizNext2()" id="wiz-next2" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- Paso 3: Notificaciones -->
+    <div class="wiz-step" id="wstep3">
+      <div class="sec" style="margin-top:0">Paso 3 · Notificaciones push</div>
+      <div style="text-align:center;padding:8px 0 20px">
+        <div style="font-size:40px;margin-bottom:12px">🔔</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px">Entérate en tiempo real</div>
+        <div style="font-size:13px;color:var(--txt2);line-height:1.6">Recibe alertas cuando el bot detecte señales,
+        ejecute órdenes, active límites de riesgo o se detenga por pérdidas.</div>
+      </div>
+      <div class="wiz-actions">
+        <button class="btn btn-ghost" onclick="wizBack(3)">← Atrás</button>
+        <button class="btn btn-accent btn-full btn-lg" onclick="wizEnablePush()">🔔 Activar notificaciones</button>
+      </div>
+      <button class="wiz-skip" onclick="wizFinish()">Omitir y abrir dashboard</button>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ═══ NAV ══════════════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="logo">
+    <div class="logo-icon">📈</div>
+    <div class="logo-text">TradeBot <span>Bridge Markets Demo</span></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="t on" onclick="tab('dash',this)">Dashboard</button>
+    <button class="t" onclick="tab('ctrl',this)">Control</button>
+    <button class="t" onclick="tab('rep',this)">Reporte</button>
+    <button class="t" onclick="tab('acct',this)">Cuenta</button>
+  </div>
+  <div class="nav-right">
+    <button class="ico-btn" id="theme-btn" onclick="toggleTheme()" title="Tema">🌙</button>
+    <button class="ico-btn" onclick="togglePush()" title="Notificaciones">🔔<span class="push-dot" id="pdot"></span></button>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═════════════════════════════════════════════════════════════════ -->
+<main>
+
+<!-- ─── DASHBOARD ─────────────────────────────────────────────────────────── -->
+<div class="panel on" id="p-dash">
+  <div class="stats" id="stats-grid">
+    <div class="sc"><div class="sc-lbl">Balance</div><div class="sc-val" id="s-bal">—</div><div class="sc-sub">cuenta demo</div></div>
+    <div class="sc"><div class="sc-lbl">PnL hoy</div><div class="sc-val" id="s-pnl">—</div><div class="sc-sub" id="s-pnl2">—</div></div>
+    <div class="sc"><div class="sc-lbl">Trades hoy</div><div class="sc-val" id="s-tr">—</div><div class="sc-sub" id="s-tr2">de —</div></div>
+    <div class="sc"><div class="sc-lbl">Pérd. consec.</div><div class="sc-val" id="s-cl">—</div><div class="sc-sub">máx 2 permitidas</div></div>
+    <div class="sc"><div class="sc-lbl">Risk limit</div><div class="sc-val" id="s-st">—</div><div class="sc-sub" id="s-st2"></div></div>
+    <div class="sc"><div class="sc-lbl">Bot estado</div><div class="sc-val" id="s-ph">—</div><div class="sc-sub" id="s-ph2">—</div></div>
+  </div>
+  <div class="sec">Señales pendientes de confirmación</div>
+  <div class="sig-list" id="sigs">
+    <div class="empty"><div class="ei">📡</div><div class="et">Sin señales pendientes</div><div class="es">El bot generará alertas cuando detecte oportunidades</div></div>
+  </div>
+</div>
+
+<!-- ─── CONTROL ───────────────────────────────────────────────────────────── -->
+<div class="panel" id="p-ctrl">
+  <div class="status-bar">
+    <div class="dot grey" id="ctrl-dot"></div>
+    <div class="sb-text">
+      <div class="sb-title" id="ctrl-title">Cargando estado...</div>
+      <div class="sb-sub" id="ctrl-sub"></div>
+    </div>
+    <div class="sb-right">
+      <span id="ctrl-chip"></span>
+    </div>
+  </div>
+
+  <div class="sec">Control manual del bot</div>
+  <div class="grid2">
+    <div class="card">
+      <h3>📊 Análisis M15</h3>
+      <div class="sub">Calcula contexto de tendencia con EMA50/200 cada 15 minutos. Actívalo primero antes de iniciar trading.</div>
+      <div class="btn-pair">
+        <button class="btn btn-green" onclick="bact('analysis/start')">▶ Iniciar</button>
+        <button class="btn btn-red" onclick="bact('analysis/stop')">⏹ Detener todo</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>💹 Trading M1</h3>
+      <div class="sub">Busca entradas RSI + breakout de 3 velas en M1. Genera señales para que apruebes antes de ejecutar.</div>
+      <div class="btn-pair">
+        <button class="btn btn-green" onclick="bact('trading/start')">▶ Iniciar</button>
+        <button class="btn btn-amber" onclick="bact('trading/stop')">⏸ Pausar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>🔁 Modo automático por horario</h3>
+    <div class="sub">Cancela el control manual y deja que el bot siga los horarios configurados abajo.</div>
+    <button class="btn btn-blue btn-full" onclick="bact('auto')">⏰ Activar modo automático ahora</button>
+  </div>
+
+  <div class="sec">Horarios de operación</div>
+  <div class="card">
+    <h3>⏱ Configurar ventanas de tiempo</h3>
+    <div class="sub">Formato 24h. Al guardar, el bot volverá a modo automático y respetará estos horarios.</div>
+    <div class="hours-grid">
+      <div class="field"><label>Inicio análisis</label><input type="number" id="h-a" min="0" max="23" placeholder="15" oninput="hintHours()"/></div>
+      <div class="field"><label>Inicio trading</label><input type="number" id="h-t" min="0" max="23" placeholder="20" oninput="hintHours()"/></div>
+      <div class="field"><label>Fin trading</label><input type="number" id="h-e" min="1" max="24" placeholder="24" oninput="hintHours()"/></div>
+    </div>
+    <div class="hours-hint" id="hours-hint">Completa los campos para ver el resumen.</div>
+    <button class="btn btn-accent btn-full" style="margin-top:14px" onclick="saveHours()">💾 Guardar horarios</button>
+  </div>
+</div>
+
+<!-- ─── REPORTE ───────────────────────────────────────────────────────────── -->
+<div class="panel" id="p-rep">
+  <div class="toggle-row">
+    <button class="tog on" onclick="loadRep(3.5,this)">Últimas 84h</button>
+    <button class="tog" onclick="loadRep(7,this)">7 días</button>
+  </div>
+  <div class="rep-grid" id="rep-sum"></div>
+  <div class="sec">Historial de trades</div>
+  <div class="tbl-wrap">
+    <table><thead><tr>
+      <th>Símbolo</th><th>Dir.</th><th>Apertura</th><th>Entrada</th><th>Cierre</th><th>PnL</th><th>Resultado</th>
+    </tr></thead><tbody id="rep-tbl"></tbody></table>
+  </div>
+</div>
+
+<!-- ─── CUENTA ────────────────────────────────────────────────────────────── -->
+<div class="panel" id="p-acct">
+  <div class="grid2">
+    <div class="card">
+      <h3>🔌 Cuenta MetaTrader 5</h3>
+      <div id="acct-connected" style="display:none">
+        <div class="conn-box"><div class="conn-name" id="a-name"></div><div class="conn-detail" id="a-detail"></div></div>
+        <button class="btn btn-red btn-full" onclick="doDisconnect()">Desconectar cuenta</button>
+      </div>
+      <div id="acct-form">
+        <div class="field"><label>Login</label><input type="number" id="a-login" placeholder="7916999"/></div>
+        <div class="field"><label>Contraseña</label><input type="password" id="a-pass" placeholder="••••••"/></div>
+        <div class="field" style="margin-bottom:16px"><label>Servidor</label><input type="text" id="a-srv" placeholder="BridgeMarkets-MT5"/></div>
+        <button class="btn btn-accent btn-full btn-lg" onclick="doConnect()">Conectar</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🔔 Notificaciones push</h3>
+      <div class="sub">Alertas en tiempo real: señales, trades ejecutados, límites de riesgo activados, bot iniciado/detenido.</div>
+      <button class="btn btn-full btn-lg" id="push-btn" onclick="togglePush()" style="background:var(--card2);border:1.5px solid var(--border2);color:var(--txt)">Activar notificaciones</button>
+      <div style="font-size:12px;color:var(--txt3);margin-top:10px" id="push-status">Estado: desactivado</div>
+    </div>
+  </div>
+</div>
+
+</main>
+<div id="toast"></div>
+
+<script>
+/* ─── Theme ─────────────────────────────────────────────────────────────── */
+const TB = document.getElementById('theme-btn');
+function toggleTheme(){
+  const d = document.documentElement;
+  const dark = d.getAttribute('data-theme') === 'dark';
+  d.setAttribute('data-theme', dark?'light':'dark');
+  TB.textContent = dark?'🌙':'☀️';
+  localStorage.setItem('tb-theme', dark?'light':'dark');
+}
+(()=>{
+  const s = localStorage.getItem('tb-theme')||'light';
+  document.documentElement.setAttribute('data-theme',s);
+  TB.textContent = s==='dark'?'☀️':'🌙';
+})();
+
+/* ─── Toast ─────────────────────────────────────────────────────────────── */
+let _tt;
+function toast(msg,cls='b'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='show '+cls;
+  clearTimeout(_tt); _tt=setTimeout(()=>el.className='',3500);
+}
+
+/* ─── Tabs ──────────────────────────────────────────────────────────────── */
+const PANELS = {dash:'p-dash',ctrl:'p-ctrl',rep:'p-rep',acct:'p-acct'};
+function tab(name,btn){
+  Object.values(PANELS).forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.querySelectorAll('.t').forEach(b=>b.classList.remove('on'));
+  document.getElementById(PANELS[name]).classList.add('on');
+  if(btn) btn.classList.add('on');
+  if(name==='rep') loadRep(3.5, document.querySelector('.tog'));
+  if(name==='ctrl') loadBotState();
+  if(name==='acct') loadConn();
+}
+
+/* ─── Wizard ────────────────────────────────────────────────────────────── */
+let _wizMode = null;
+function wizStep(n){
+  [1,2,3].forEach(i=>{
+    document.getElementById('wstep'+i).classList.toggle('on',i===n);
+    const ws=document.getElementById('ws'+i);
+    ws.className='ws'+(i<n?' done':i===n?' active':'');
+  });
+}
+function wizSkip(step){
+  if(step===1) wizStep(2);
+}
+function wizBack(step){
+  wizStep(step-1);
+}
+async function wizConnect(){
+  const login=parseInt(document.getElementById('wf-login').value);
+  const pass=document.getElementById('wf-pass').value;
+  const srv=document.getElementById('wf-server').value.trim();
+  if(!login||!pass||!srv){toast('Completa todos los campos','r');return;}
+  toast('Conectando...','b');
+  try{
+    const r=await fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({login,password:pass,server:srv})});
+    const d=await r.json();
+    if(d.ok){toast('✅ Conectado a MT5','g'); wizStep(2);}
+    else toast('❌ '+(d.error||'Error'),'r');
+  }catch(e){toast('Error de red','r');}
+}
+function wizSetMode(m){
+  _wizMode=m;
+  document.getElementById('wmode-auto').classList.toggle('selected', m==='auto');
+  document.getElementById('wmode-manual').classList.toggle('selected', m==='manual');
+  document.getElementById('wiz-hours-section').style.display = m==='auto'?'block':'none';
+  document.getElementById('wiz-next2').disabled = false;
+  updateWizHint();
+}
+function updateWizHint(){
+  const a=document.getElementById('wh-a').value||15;
+  const t=document.getElementById('wh-t').value||20;
+  const e=document.getElementById('wh-e').value||24;
+  document.getElementById('wiz-hours-hint').innerHTML =
+    `Análisis: <b>${a}:00 → ${t}:00</b> &nbsp;|&nbsp; Trading: <b>${t}:00 → ${e==24?'00:00 (medianoche)':e+':00'}</b>`;
+}
+['wh-a','wh-t','wh-e'].forEach(id=>document.getElementById(id).addEventListener('input',updateWizHint));
+async function wizNext2(){
+  if(!_wizMode){toast('Selecciona un modo','r');return;}
+  if(_wizMode==='auto'){
+    const a=parseInt(document.getElementById('wh-a').value)||15;
+    const t=parseInt(document.getElementById('wh-t').value)||20;
+    const e=parseInt(document.getElementById('wh-e').value)||24;
+    if(a>=t||t>=e){toast('Orden inválido: análisis < trading_inicio < fin','r');return;}
+    await fetch('/api/bot/hours',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({analysis_start:a,trading_start:t,trading_end:e})});
+    toast('⏰ Horarios guardados','g');
+  } else {
+    await fetch('/api/bot/analysis/stop',{method:'POST'});
+  }
+  wizStep(3);
+}
+async function wizEnablePush(){
+  await togglePush();
+  wizFinish();
+}
+function wizFinish(){
+  document.getElementById('wizard-overlay').style.display='none';
+  localStorage.setItem('tb-wiz','done');
+  loadStats(); loadSignals(); loadBotState();
+}
+(()=>{
+  if(localStorage.getItem('tb-wiz')==='done'){
+    document.getElementById('wizard-overlay').style.display='none';
+    loadStats(); loadSignals(); loadBotState();
+  }
+})();
+
+/* ─── Stats ─────────────────────────────────────────────────────────────── */
+async function loadStats(){
+  try{
+    const r=await fetch('/api/stats'); const d=await r.json();
+    const bal=d.balance;
+    document.getElementById('s-bal').textContent = bal!=null ? '$'+bal.toLocaleString('es-CO',{minimumFractionDigits:2}) : '—';
+    const p=d.pnl_pct||0;
+    const pEl=document.getElementById('s-pnl');
+    pEl.textContent=(p>=0?'+':'')+p+'%'; pEl.className='sc-val '+(p>=0?'g':'r');
+    document.getElementById('s-pnl2').textContent='vs balance inicial';
+    document.getElementById('s-tr').textContent=d.trades_today;
+    document.getElementById('s-tr2').textContent='de '+d.max_trades+' máx';
+    document.getElementById('s-cl').textContent=d.consecutive_losses;
+    const sEl=document.getElementById('s-st');
+    sEl.textContent=d.active?'OK':'Detenido'; sEl.className='sc-val '+(d.active?'g':'r');
+    document.getElementById('s-st2').textContent=d.stopped_reason||'';
+  }catch(e){}
+}
+
+/* ─── Bot state ──────────────────────────────────────────────────────────── */
+async function loadBotState(){
+  try{
+    const r=await fetch('/api/bot/state'); const d=await r.json();
+    const dot=document.getElementById('ctrl-dot');
+    const title=document.getElementById('ctrl-title');
+    const sub=document.getElementById('ctrl-sub');
+    const chip=document.getElementById('ctrl-chip');
+    if(d.trading_enabled){
+      dot.className='dot green pulse'; title.textContent='Trading activo';
+      sub.textContent='Buscando señales M1 + ejecutando confirmadas';
+    } else if(d.analysis_enabled){
+      dot.className='dot amber pulse'; title.textContent='Analizando mercado';
+      sub.textContent='Actualizando contexto EMA50/200 en M15';
+    } else {
+      dot.className='dot grey'; title.textContent='Bot inactivo';
+      sub.textContent=d.manual_mode?'Detenido manualmente':'Fuera del horario configurado';
+    }
+    chip.innerHTML=d.manual_mode
+      ?'<span class="chip manual">⚙ Manual</span>'
+      :'<span class="chip auto">⏰ Automático</span>';
+    document.getElementById('h-a').value=d.analysis_start;
+    document.getElementById('h-t').value=d.trading_start;
+    document.getElementById('h-e').value=d.trading_end;
+    hintHours();
+    // dashboard stat card
+    const phEl=document.getElementById('s-ph');
+    phEl.textContent=d.trading_enabled?'Trading':d.analysis_enabled?'Análisis':'Off';
+    phEl.className='sc-val '+(d.trading_enabled?'g':d.analysis_enabled?'':'r');
+    document.getElementById('s-ph2').textContent=d.manual_mode?'modo manual':'modo automático';
+  }catch(e){}
+}
+
+function hintHours(){
+  const a=document.getElementById('h-a').value;
+  const t=document.getElementById('h-t').value;
+  const e=document.getElementById('h-e').value;
+  const el=document.getElementById('hours-hint');
+  if(a&&t&&e)
+    el.innerHTML=`📊 Análisis: <b>${a}:00 → ${t}:00</b> &nbsp;&nbsp; 💹 Trading: <b>${t}:00 → ${e==24?'00:00':e+':00'}</b>`;
+}
+
+async function bact(action){
+  const msgs={
+    'analysis/start':'▶ Análisis M15 iniciado',
+    'analysis/stop':'⏹ Bot detenido completamente',
+    'trading/start':'▶ Trading M1 activo',
+    'trading/stop':'⏸ Trading pausado (análisis continúa)',
+    'auto':'⏰ Modo automático activado',
+  };
+  const r=await fetch('/api/bot/'+action,{method:'POST'});
+  const d=await r.json();
+  if(d.ok){toast(msgs[action]||'OK','g'); loadBotState(); loadStats();}
+}
+
+async function saveHours(){
+  const a=parseInt(document.getElementById('h-a').value);
+  const t=parseInt(document.getElementById('h-t').value);
+  const e=parseInt(document.getElementById('h-e').value);
+  if([a,t,e].some(isNaN)){toast('Ingresa valores 0–24','r');return;}
+  if(a>=t||t>=e){toast('Orden: inicio_análisis < inicio_trading < fin','r');return;}
+  const r=await fetch('/api/bot/hours',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({analysis_start:a,trading_start:t,trading_end:e})});
+  const d=await r.json();
+  if(d.ok){toast('💾 Horarios guardados — modo automático activo','g'); loadBotState();}
+}
+
+/* ─── Signals ────────────────────────────────────────────────────────────── */
+async function loadSignals(){
+  try{
+    const r=await fetch('/api/pending'); const sigs=await r.json();
+    const c=document.getElementById('sigs');
+    if(!sigs.length){
+      c.innerHTML='<div class="empty"><div class="ei">📡</div><div class="et">Sin señales pendientes</div><div class="es">El bot generará alertas cuando detecte oportunidades</div></div>';
+      return;
+    }
+    c.innerHTML=sigs.map(s=>`
+      <div class="sig-card">
+        <div>
+          <div class="sig-top">
+            <span class="chip ${s.direction==='buy'?'buy':'sell'}">${s.direction==='buy'?'▲ BUY':'▼ SELL'}</span>
+            <span class="sig-sym">${s.symbol}</span>
+            <span class="sig-ts">${new Date(s.created_at).toLocaleTimeString('es-CO')}</span>
+          </div>
+          <div class="sig-prices">
+            <div class="pi"><div class="pl">Entrada</div><div class="pv">${(+s.entry_price).toFixed(2)}</div></div>
+            <div class="pi"><div class="pl">Stop Loss</div><div class="pv sl">${(+s.sl).toFixed(2)}</div></div>
+            <div class="pi"><div class="pl">Take Profit</div><div class="pv tp">${(+s.tp).toFixed(2)}</div></div>
+          </div>
+          <div class="sig-meta">RSI: <b>${s.rsi_value?(+s.rsi_value).toFixed(1):'—'}</b> &nbsp;|&nbsp; Lote: <b>${s.lot_size?(+s.lot_size).toFixed(2):'—'}</b></div>
+        </div>
+        <div class="sig-actions">
+          <button class="btn btn-accent" onclick="confirmSig(${s.id})">✓ Confirmar</button>
+          <button class="btn btn-ghost btn-sm" onclick="rejectSig(${s.id})">✕ Rechazar</button>
+        </div>
+      </div>
+    `).join('');
+  }catch(e){}
+}
+async function confirmSig(id){
+  await fetch('/api/signal/'+id+'/confirm',{method:'POST'});
+  toast('✅ Señal confirmada — se ejecutará en el próximo ciclo','g'); loadSignals();
+}
+async function rejectSig(id){
+  await fetch('/api/signal/'+id+'/reject',{method:'POST'});
+  toast('Señal rechazada','b'); loadSignals();
+}
+
+/* ─── Report ─────────────────────────────────────────────────────────────── */
+async function loadRep(days,btn){
+  if(btn){document.querySelectorAll('.tog').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+  try{
+    const r=await fetch('/api/report?days='+days); const d=await r.json();
+    const s=d.summary||{};
+    document.getElementById('rep-sum').innerHTML=`
+      <div class="rc"><div class="rl">Trades</div><div class="rv">${s.total_trades||0}</div></div>
+      <div class="rc"><div class="rl">Ganados</div><div class="rv" style="color:var(--green)">${s.wins||0}</div></div>
+      <div class="rc"><div class="rl">Perdidos</div><div class="rv" style="color:var(--red)">${s.losses||0}</div></div>
+      <div class="rc"><div class="rl">Win rate</div><div class="rv">${s.win_rate!=null?s.win_rate.toFixed(1)+'%':'—'}</div></div>
+      <div class="rc"><div class="rl">PnL total</div><div class="rv" style="color:${(s.total_pnl||0)>=0?'var(--green)':'var(--red)'}">${s.total_pnl!=null?((s.total_pnl>=0?'+':'')+s.total_pnl.toFixed(2)):'—'}</div></div>
+    `;
+    const trs=d.trades||[];
+    document.getElementById('rep-tbl').innerHTML=trs.length
+      ?trs.map(t=>`<tr>
+        <td><b>${t.symbol||'—'}</b></td>
+        <td><span class="chip ${t.direction==='buy'?'buy':'sell'}" style="font-size:10px">${(t.direction||'').toUpperCase()}</span></td>
+        <td style="color:var(--txt2)">${t.open_time?new Date(t.open_time).toLocaleString('es-CO'):'—'}</td>
+        <td>${t.open_price!=null?(+t.open_price).toFixed(2):'—'}</td>
+        <td>${t.close_price!=null?(+t.close_price).toFixed(2):'—'}</td>
+        <td style="font-weight:700;color:${(t.profit||0)>=0?'var(--green)':'var(--red)'}">${t.profit!=null?((t.profit>=0?'+':'')+((+t.profit).toFixed(2))):'—'}</td>
+        <td><span class="chip ${t.result==='win'?'buy':'sell'}" style="font-size:10px">${t.result||'—'}</span></td>
+      </tr>`).join('')
+      :'<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">Sin trades en este período</td></tr>';
+  }catch(e){}
+}
+
+/* ─── Account ────────────────────────────────────────────────────────────── */
+async function loadConn(){
+  try{
+    const r=await fetch('/api/connection'); const d=await r.json();
+    document.getElementById('acct-connected').style.display=d.connected?'block':'none';
+    document.getElementById('acct-form').style.display=d.connected?'none':'block';
+    if(d.connected){
+      document.getElementById('a-name').textContent=d.name||'Cuenta #'+d.login;
+      document.getElementById('a-detail').textContent=`Login: ${d.login} | ${d.server} | ${d.currency} ${(d.balance||0).toFixed(2)}`;
+    }
+  }catch(e){}
+}
+async function doConnect(){
+  const login=parseInt(document.getElementById('a-login').value);
+  const pass=document.getElementById('a-pass').value;
+  const srv=document.getElementById('a-srv').value.trim();
+  if(!login||!pass||!srv){toast('Completa todos los campos','r');return;}
+  toast('Conectando...','b');
+  try{
+    const r=await fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({login,password:pass,server:srv})});
+    const d=await r.json();
+    if(d.ok){toast('✅ Conectado a MT5','g');loadConn();loadStats();}
+    else toast('❌ '+(d.error||'Error'),'r');
+  }catch(e){toast('Error de red','r');}
+}
+async function doDisconnect(){
+  await fetch('/api/disconnect',{method:'POST'});
+  toast('Desconectado','b'); loadConn();
+}
+
+/* ─── Push ───────────────────────────────────────────────────────────────── */
+let _sub=null;
+async function togglePush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){
+    toast('Navegador no soporta push','r'); return false;
+  }
+  const reg=await navigator.serviceWorker.register('/sw.js');
+  await navigator.serviceWorker.ready;
+  _sub=await reg.pushManager.getSubscription();
+  if(_sub){
+    await _sub.unsubscribe();
+    await fetch('/api/push/unsubscribe',{method:'DELETE',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({endpoint:_sub.endpoint,p256dh:'',auth:''})});
+    _sub=null; setPushUI(false); toast('Notificaciones desactivadas','b'); return false;
+  }
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted'){toast('Permiso denegado por el navegador','r');return false;}
+  const vr=await fetch('/api/push/vapid-public-key');
+  const {publicKey}=await vr.json();
+  const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(publicKey)});
+  const j=sub.toJSON();
+  await fetch('/api/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth})});
+  _sub=sub; setPushUI(true); toast('🔔 Notificaciones activadas','g'); return true;
+}
+function setPushUI(on){
+  document.getElementById('pdot').className='push-dot'+(on?' on':'');
+  const btn=document.getElementById('push-btn');
+  btn.textContent=on?'🔕 Desactivar notificaciones':'Activar notificaciones';
+  btn.style.background=on?'var(--greenBg)':'var(--card2)';
+  btn.style.borderColor=on?'var(--green)':'var(--border2)';
+  btn.style.color=on?'var(--green)':'var(--txt)';
+  document.getElementById('push-status').textContent=on?'Estado: activo ✅':'Estado: desactivado';
+}
+function b64(s){
+  const p=(s+'===').slice(0,s.length+(4-s.length%4)%4);
+  const raw=atob(p.replace(/-/g,'+').replace(/_/g,'/'));
+  const a=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i);
+  return a;
+}
+(async()=>{
+  if(!('serviceWorker' in navigator))return;
+  try{const reg=await navigator.serviceWorker.register('/sw.js');
+    const sub=await reg.pushManager.getSubscription();
+    if(sub)setPushUI(true);}catch(e){}
+})();
+
+/* ─── Polling ────────────────────────────────────────────────────────────── */
+loadStats(); loadSignals(); loadBotState();
+setInterval(()=>{loadStats();loadSignals();loadBotState();},10000);
+</script>
+</body>
+</html>
