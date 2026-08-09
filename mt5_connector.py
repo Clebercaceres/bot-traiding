@@ -20,19 +20,20 @@ def connect():
     if not mt5.initialize(path=config.MT5_PATH or None):
         raise RuntimeError(f"No se pudo inicializar MT5: {mt5.last_error()}")
 
-    if config.MT5_LOGIN:
+    # Solo intenta login si hay credenciales en config (pueden venir del dashboard)
+    if config.MT5_LOGIN and config.MT5_PASSWORD and config.MT5_SERVER:
         authorized = mt5.login(
             login=config.MT5_LOGIN,
             password=config.MT5_PASSWORD,
             server=config.MT5_SERVER,
         )
         if not authorized:
-            raise RuntimeError(f"Login fallido: {mt5.last_error()}")
+            raise RuntimeError(f"Login fallido (código {mt5.last_error()[0]}): credenciales incorrectas o servidor incorrecto.")
 
     info = mt5.account_info()
     if info is None:
-        raise RuntimeError("No hay cuenta conectada en MT5. Abre el terminal y loguea la cuenta demo.")
-    print(f"[MT5] Conectado -> cuenta {info.login} | balance: {info.balance} {info.currency}")
+        raise RuntimeError("MT5 inicializado pero sin cuenta activa. Conecta desde el dashboard.")
+    print(f"[MT5] Conectado → cuenta {info.login} | balance: {info.balance} {info.currency}")
     return info
 
 
@@ -69,11 +70,46 @@ def get_current_price(symbol):
     return tick
 
 
+def _get_filling_mode(symbol):
+    """Detecta el modo de llenado soportado por el broker para este símbolo."""
+    info = mt5.symbol_info(symbol)
+    if info is None:
+        return mt5.ORDER_FILLING_IOC
+    fm = info.filling_mode
+    if fm & 1:   # FOK
+        return mt5.ORDER_FILLING_FOK
+    if fm & 2:   # IOC
+        return mt5.ORDER_FILLING_IOC
+    return mt5.ORDER_FILLING_RETURN
+
+
 def place_market_order(symbol, direction, lot_size, sl, tp, comment="tradebot"):
     """direction: 'buy' | 'sell'. Devuelve el resultado de MT5."""
     tick = get_current_price(symbol)
     price = tick.ask if direction == "buy" else tick.bid
     order_type = mt5.ORDER_TYPE_BUY if direction == "buy" else mt5.ORDER_TYPE_SELL
+
+    # Recalcular SL/TP preservando las distancias originales pero ancladas al precio actual
+    original_sl_dist = abs(sl - tp) / (config.ATR_SL_MULTIPLIER + config.ATR_TP_MULTIPLIER) * config.ATR_SL_MULTIPLIER
+    original_tp_dist = abs(sl - tp) / (config.ATR_SL_MULTIPLIER + config.ATR_TP_MULTIPLIER) * config.ATR_TP_MULTIPLIER
+    if direction == "buy":
+        sl = price - original_sl_dist
+        tp = price + original_tp_dist
+    else:
+        sl = price + original_sl_dist
+        tp = price - original_tp_dist
+
+    # Validar stop level mínimo del broker
+    info = mt5.symbol_info(symbol)
+    if info:
+        min_stop = info.trade_stops_level * info.point
+        sl_dist = abs(price - sl)
+        tp_dist = abs(tp - price)
+        if min_stop > 0:
+            if sl_dist < min_stop * 1.2:
+                sl = (price - min_stop * 2.0) if direction == "buy" else (price + min_stop * 2.0)
+            if tp_dist < min_stop * 1.2:
+                tp = (price + min_stop * 3.0) if direction == "buy" else (price - min_stop * 3.0)
 
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
@@ -87,12 +123,27 @@ def place_market_order(symbol, direction, lot_size, sl, tp, comment="tradebot"):
         "magic": 990011,
         "comment": comment,
         "type_time": mt5.ORDER_TIME_GTC,
-        "type_filling": mt5.ORDER_FILLING_IOC,
+        "type_filling": _get_filling_mode(symbol),
     }
     result = mt5.order_send(request)
     if result.retcode != mt5.TRADE_RETCODE_DONE:
         raise RuntimeError(f"Orden rechazada: {result.retcode} - {result.comment}")
     return result
+
+
+def detect_broker() -> str:
+    """Detecta el broker activo. Retorna 'bridge' | 'deriv' | 'unknown'."""
+    info = mt5.account_info()
+    if info is None:
+        return "unknown"
+    server = (info.server or "").lower()
+    company = (info.company or "").lower()
+    combined = server + company
+    if "bridge" in combined:
+        return "bridge"
+    if "deriv" in combined or "binary" in combined:
+        return "deriv"
+    return "unknown"
 
 
 def get_open_positions(magic=990011):
@@ -117,6 +168,6 @@ def close_position(position):
         "magic": 990011,
         "comment": "tradebot-close",
         "type_time": mt5.ORDER_TIME_GTC,
-        "type_filling": mt5.ORDER_FILLING_IOC,
+        "type_filling": _get_filling_mode(position.symbol),
     }
     return mt5.order_send(request)

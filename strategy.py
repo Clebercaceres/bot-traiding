@@ -43,35 +43,29 @@ def _atr(df: pd.DataFrame, period: int) -> float:
 
 # ─── Contexto M15 ────────────────────────────────────────────────────────────
 
-def analyze_m15_context() -> dict:
+def analyze_m15_context(symbol: str) -> dict:
     """
-    Lee velas M15 del símbolo BULL (el más líquido como referencia),
-    calcula EMA50 y EMA200, determina el sesgo, y lo registra en db.
+    Analiza el contexto M15 de UN símbolo específico.
     Retorna: {'bias': 'bull'|'bear'|'neutral', 'symbol': str, 'ema_fast': float, 'ema_slow': float}
     """
-    # Usamos BullX500 como índice de referencia para el contexto de mercado
-    ref_symbol = config.SYMBOL_BULL
-    df = mt5_connector.get_candles(ref_symbol, config.TF_CONTEXT, count=300)
+    df = mt5_connector.get_candles(symbol, config.TF_CONTEXT, count=300)
 
     ema_fast = float(_ema(df["close"], config.EMA_FAST).iloc[-1])
     ema_slow = float(_ema(df["close"], config.EMA_SLOW).iloc[-1])
 
-    if ema_fast > ema_slow:
+    if ema_fast > ema_slow * 1.0001:
         bias = "bull"
-        active_symbol = config.SYMBOL_BULL
-    elif ema_fast < ema_slow:
+    elif ema_fast < ema_slow * 0.9999:
         bias = "bear"
-        active_symbol = config.SYMBOL_BEAR
     else:
         bias = "neutral"
-        active_symbol = config.SYMBOL_BULL
 
-    db.log_analysis(ref_symbol, ema_fast, ema_slow, bias)
-    print(f"[STRATEGY] M15 contexto → bias={bias} | EMA{config.EMA_FAST}={ema_fast:.4f} EMA{config.EMA_SLOW}={ema_slow:.4f}")
+    db.log_analysis(symbol, ema_fast, ema_slow, bias)
+    print(f"[STRATEGY] {symbol} M15 → bias={bias} | EMA{config.EMA_FAST}={ema_fast:.4f} EMA{config.EMA_SLOW}={ema_slow:.4f}")
 
     return {
         "bias": bias,
-        "symbol": active_symbol,
+        "symbol": symbol,
         "ema_fast": ema_fast,
         "ema_slow": ema_slow,
     }
@@ -81,8 +75,8 @@ def analyze_m15_context() -> dict:
 
 def check_entry_signal(context: dict) -> dict | None:
     """
-    Evalúa si hay señal de entrada en M1 según el sesgo actual.
-    Retorna un dict con la señal si existe, o None.
+    Evalúa señal de entrada M1 para el símbolo y sesgo del contexto dado.
+    Retorna dict con la señal si hay, o None.
     """
     bias = context["bias"]
     symbol = context["symbol"]
@@ -143,8 +137,52 @@ def check_entry_signal(context: dict) -> dict | None:
             }
 
     if signal:
-        print(f"[STRATEGY] Señal detectada → {signal['direction'].upper()} {symbol} | RSI={rsi_val:.1f} | entry={signal['entry']} SL={signal['sl']} TP={signal['tp']}")
+        signal["score"] = _score_signal(signal, bias, rsi_val, _context_ema_gap(symbol))
+        print(f"[STRATEGY] ✅ Señal {signal['direction'].upper()} {symbol} | RSI={rsi_val:.1f} | score={signal['score']:.1f}")
     else:
-        print(f"[STRATEGY] Sin señal | {symbol} | bias={bias} | RSI={rsi_val:.1f} | breakout_high={current_close:.5f}>{prev_high:.5f} breakout_low={current_close:.5f}<{prev_low:.5f}")
+        print(f"[STRATEGY] — {symbol} | bias={bias} | RSI={rsi_val:.1f}")
 
     return signal
+
+
+def _context_ema_gap(symbol: str) -> float:
+    """Retorna la separación relativa entre EMA50 y EMA200 del contexto cacheado."""
+    try:
+        from scheduler import _context_cache
+        ctx = _context_cache.get(symbol, {})
+        fast = ctx.get("ema_fast", 0)
+        slow = ctx.get("ema_slow", 1)
+        if slow == 0:
+            return 0.0
+        return abs(fast - slow) / slow * 100  # % de separación
+    except Exception:
+        return 0.0
+
+
+def _score_signal(signal: dict, bias: str, rsi: float, ema_gap_pct: float) -> float:
+    """
+    Score 0–100 que indica la calidad de la señal.
+    Mayor score = mayor convicción = el bot prefiere esta oportunidad.
+
+    Componentes:
+    - RSI score (40pts): qué tan extremo está el RSI (más cerca del extremo = mejor)
+    - EMA gap score (40pts): qué tan separadas están las EMAs (tendencia más clara = mejor)
+    - RR score (20pts): relación riesgo/beneficio de SL vs TP
+    """
+    # RSI: en bull buscamos RSI saliendo de oversold (30-50), mejor cuanto más cerca de 30
+    # En bear buscamos salida de overbought (50-70), mejor cuanto más cerca de 70
+    if bias == "bull":
+        rsi_score = max(0, (50 - rsi) / 20 * 40)   # RSI=30 → 40pts, RSI=50 → 0pts
+    else:
+        rsi_score = max(0, (rsi - 50) / 20 * 40)   # RSI=70 → 40pts, RSI=50 → 0pts
+
+    # EMA gap: separación de 0.5% o más → máximo (mercado con tendencia clara)
+    ema_score = min(40, ema_gap_pct / 0.5 * 40)
+
+    # RR: TP / SL distancia (RR ≥ 2.5 → 20pts)
+    sl_dist = abs(signal["entry"] - signal["sl"])
+    tp_dist = abs(signal["tp"] - signal["entry"])
+    rr = tp_dist / sl_dist if sl_dist > 0 else 0
+    rr_score = min(20, rr / 2.5 * 20)
+
+    return round(rsi_score + ema_score + rr_score, 1)

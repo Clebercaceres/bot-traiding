@@ -55,7 +55,11 @@ def calculate_lot_size(symbol: str, entry: float, sl: float) -> float:
     # Redondear al step más cercano (hacia abajo para no exceder el riesgo)
     lot = max(min_lot, min(max_lot, round(raw_lot // step * step, 8)))
 
-    print(f"[RISK] balance={balance:.2f} | riesgo={risk_amount:.2f} | SL_dist={sl_distance:.5f} | lot={lot}")
+    # Ganancia potencial = riesgo * RR (más simple y correcto que calcular por ticks)
+    rr = config.ATR_TP_MULTIPLIER / config.ATR_SL_MULTIPLIER
+    potential_gain = round(risk_amount * rr, 2)
+
+    print(f"[RISK] balance={balance:.2f} | riesgo={risk_amount:.2f} | ganancia_est={potential_gain:.2f} | SL_dist={sl_distance:.5f} | lot={lot}")
     return lot
 
 

@@ -77,36 +77,61 @@ a{color:inherit;text-decoration:none}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
 
 /* ─── Nav ────────────────────────────────────────────────────────────── */
+/* ── Top nav (desktop) ───────────────────────────────────────────────── */
 nav{
   background:var(--card);border-bottom:1px solid var(--border);
   padding:0 16px;display:flex;align-items:center;gap:4px;
-  height:52px;position:sticky;top:0;z-index:200;
-  box-shadow:var(--shadow);overflow:hidden;
+  height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow);
 }
 .logo{display:flex;align-items:center;gap:8px;margin-right:12px;flex-shrink:0}
 .logo-icon{width:30px;height:30px;background:var(--accent);border-radius:8px;
            display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
 .logo-text{font-weight:800;font-size:14px;color:var(--txt);letter-spacing:-.3px;white-space:nowrap}
 .logo-text span{font-weight:400;font-size:11px;color:var(--txt3);display:block;margin-top:-2px}
-@media(max-width:480px){.logo-text span{display:none}}
-.nav-tabs{display:flex;gap:2px;flex:1;overflow:hidden}
+.nav-tabs{display:flex;gap:2px;flex:1}
 .t{padding:5px 11px;border-radius:7px;background:transparent;color:var(--txt2);
    font-size:13px;font-weight:500;transition:all .15s;border:none;white-space:nowrap;flex-shrink:0}
 .t:hover{background:var(--card2);color:var(--txt)}
 .t.on{background:var(--accentBg);color:var(--accent);font-weight:700}
-@media(max-width:420px){.t{font-size:12px;padding:5px 9px}}
 .nav-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 .ico-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);
          background:var(--card2);color:var(--txt);display:flex;align-items:center;
          justify-content:center;font-size:16px;transition:all .15s}
 .ico-btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}
 .push-dot{width:7px;height:7px;border-radius:50%;background:var(--txt3);
-           display:inline-block;margin-left:4px;vertical-align:middle;transition:background .3s}
+          display:inline-block;margin-left:4px;vertical-align:middle;transition:background .3s}
 .push-dot.on{background:var(--green);box-shadow:0 0 0 3px var(--greenBg)}
 
-/* ─── Layout ─────────────────────────────────────────────────────────── */
-main{max-width:1080px;margin:0 auto;padding:20px 16px}
-@media(max-width:420px){main{padding:14px 12px}}
+/* ── Bottom nav (mobile) ─────────────────────────────────────────────── */
+#bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;
+  background:var(--card);border-top:1px solid var(--border);
+  padding:4px 0 env(safe-area-inset-bottom,4px);
+  box-shadow:0 -2px 16px rgba(0,0,0,.12);
+}
+#bottom-nav .bnav{display:flex;justify-content:space-around;align-items:stretch}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;padding:7px 2px 5px;border:none;background:transparent;color:var(--txt3);
+    font-size:9px;font-weight:700;cursor:pointer;transition:color .15s;
+    text-transform:uppercase;letter-spacing:.3px;min-width:0}
+.bn .bni{font-size:22px;line-height:1.1}
+.bn.on{color:var(--accent)}
+
+@media(max-width:768px){
+  .nav-tabs{display:none}
+  #bottom-nav{display:block}
+  main{padding:14px 12px 76px}
+}
+/* Report filters: no overflow */
+.toggle-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tog{padding:6px 12px;border-radius:99px;border:1.5px solid var(--border);
+     background:var(--card);color:var(--txt2);font-size:12px;font-weight:600;
+     cursor:pointer;transition:all .15s;white-space:nowrap}
+.tog.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* Custom range: contained */
+#custom-range{background:var(--card2);border:1px solid var(--border);
+              border-radius:var(--r);padding:14px;margin-top:8px}
+#custom-range .grid2{gap:8px}
 .panel{display:none}.panel.on{display:block}
 
 /* ─── Chip / Badge ───────────────────────────────────────────────────── */
@@ -220,11 +245,7 @@ main{max-width:1080px;margin:0 auto;padding:20px 16px}
             color:var(--blue);line-height:1.6}
 
 /* ─── Report ─────────────────────────────────────────────────────────── */
-.toggle-row{display:flex;gap:6px;margin-bottom:18px}
-.tog{padding:6px 18px;border-radius:99px;border:1.5px solid var(--border);
-     background:var(--card);color:var(--txt2);font-size:13px;font-weight:600;
-     cursor:pointer;transition:all .15s}
-.tog.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* toggle-row/tog definidos arriba — no duplicar */
 .rep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
 .rc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
     padding:14px 16px;box-shadow:var(--shadow)}
@@ -284,6 +305,52 @@ tbody tr:hover td{background:var(--card2)}
 .mode-card .mc-title{font-weight:800;font-size:14px;margin-bottom:3px}
 .mode-card .mc-desc{font-size:12px;color:var(--txt2);line-height:1.5}
 
+/* ─── Report ─────────────────────────────────────────────────────────── */
+.rep-filters{margin-bottom:16px}
+/* Trade cards mobile */
+.trade-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+            padding:14px 16px;margin-bottom:8px;box-shadow:var(--shadow)}
+.trade-card .tc-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.trade-card .tc-sym{font-weight:800;font-size:14px}
+.trade-card .tc-ts{font-size:11px;color:var(--txt3);margin-left:auto}
+.trade-card .tc-row{display:flex;justify-content:space-between;font-size:13px;
+                    padding:4px 0;border-bottom:1px solid var(--border)}
+.trade-card .tc-row:last-child{border-bottom:none}
+.trade-card .tc-lbl{color:var(--txt2)}
+.trade-card .tc-val{font-weight:600}
+/* Hide table on mobile, show cards; hide cards on desktop, show table */
+.tbl-wrap{display:block}
+.trade-cards{display:none}
+@media(max-width:640px){.tbl-wrap{display:none}.trade-cards{display:block}
+  #rep-charts-wrap{grid-template-columns:1fr}}
+
+/* ─── Symbol cards ───────────────────────────────────────────────────── */
+.sym-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);
+          padding:16px 18px;box-shadow:var(--shadow);display:flex;align-items:center;
+          gap:14px;margin-bottom:8px;transition:border-color .15s}
+.sym-card.inactive{opacity:.55}
+.sym-icon{width:40px;height:40px;border-radius:10px;background:var(--accentBg);
+          display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sym-info{flex:1;min-width:0}
+.sym-name{font-weight:800;font-size:14px;letter-spacing:-.2px}
+.sym-meta{font-size:12px;color:var(--txt2);margin-top:2px}
+.sym-bias{display:flex;align-items:center;gap:6px;margin-top:6px}
+.bias-pill{padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase}
+.bias-pill.bull{background:var(--greenBg);color:var(--green)}
+.bias-pill.bear{background:var(--redBg);color:var(--red)}
+.bias-pill.neutral{background:var(--card2);color:var(--txt3);border:1px solid var(--border)}
+.bias-pill.unknown{background:var(--card2);color:var(--txt3)}
+.sym-actions{display:flex;gap:6px;flex-shrink:0}
+/* Toggle switch */
+.sw-wrap{display:flex;align-items:center;gap:6px}
+.sw{position:relative;width:40px;height:22px}
+.sw input{opacity:0;width:0;height:0}
+.sw-slider{position:absolute;inset:0;background:var(--border2);border-radius:99px;cursor:pointer;transition:.2s}
+.sw-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;
+                   background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked + .sw-slider{background:var(--green)}
+.sw input:checked + .sw-slider::before{transform:translateX(18px)}
+
 /* ─── Toast ──────────────────────────────────────────────────────────── */
 #toast{position:fixed;bottom:24px;right:24px;padding:13px 20px;border-radius:10px;
        background:var(--card);border:1.5px solid var(--border);box-shadow:var(--shadow3);
@@ -294,6 +361,7 @@ tbody tr:hover td{background:var(--card2)}
 #toast.r{border-color:var(--red);color:var(--red)}
 #toast.b{border-color:var(--blue);color:var(--blue)}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -337,12 +405,12 @@ tbody tr:hover td{background:var(--card2)}
     <div class="wiz-step" id="wstep2">
       <div class="sec" style="margin-top:0">Paso 2 · ¿Cómo quieres operar?</div>
       <button class="mode-card" id="wmode-auto" onclick="wizSetMode('auto')">
-        <div class="mc-title">⏰ Automático por horario</div>
-        <div class="mc-desc">El bot estudia y opera según los horarios que configures. Ideal para no estar pendiente.</div>
+        <div class="mc-title">🤖 Automático</div>
+        <div class="mc-desc">El bot ejecuta las señales directamente sin pedir confirmación.</div>
       </button>
       <button class="mode-card" id="wmode-manual" onclick="wizSetMode('manual')">
-        <div class="mc-title">🎮 Control manual</div>
-        <div class="mc-desc">Tú decides cuándo inicia el análisis y cuándo busca señales desde el dashboard.</div>
+        <div class="mc-title">🎮 Confirmación manual</div>
+        <div class="mc-desc">El bot genera la señal pero espera tu clic antes de operar.</div>
       </button>
       <div id="wiz-hours-section" style="display:none;margin-top:14px">
         <div class="hours-grid">
@@ -396,16 +464,38 @@ tbody tr:hover td{background:var(--card2)}
     <div class="logo-text">TradeBot <span>Bridge Markets Demo</span></div>
   </div>
   <div class="nav-tabs">
-    <button class="t on" onclick="tab('dash',this)">Dashboard</button>
-    <button class="t" onclick="tab('ctrl',this)">Control</button>
-    <button class="t" onclick="tab('rep',this)">Reporte</button>
-    <button class="t" onclick="tab('acct',this)">Cuenta</button>
+    <button class="t on" onclick="tab('dash',this,'bn-dash')">Dashboard</button>
+    <button class="t" onclick="tab('ctrl',this,'bn-ctrl')">Control</button>
+    <button class="t" onclick="tab('syms',this,'bn-syms')">Símbolos</button>
+    <button class="t" onclick="tab('rep',this,'bn-rep')">Reporte</button>
+    <button class="t" onclick="tab('acct',this,'bn-acct')">Cuenta</button>
   </div>
   <div class="nav-right">
     <button class="ico-btn" id="theme-btn" onclick="toggleTheme()" title="Tema">🌙</button>
     <button class="ico-btn" onclick="togglePush()" title="Notificaciones">🔔<span class="push-dot" id="pdot"></span></button>
   </div>
 </nav>
+
+<!-- ── Bottom nav (solo mobile) ──────────────────────────────────────────── -->
+<div id="bottom-nav">
+  <div class="bnav">
+    <button class="bn on" id="bn-dash" onclick="tab('dash',null,'bn-dash')">
+      <span class="bni">📊</span>Dashboard
+    </button>
+    <button class="bn" id="bn-ctrl" onclick="tab('ctrl',null,'bn-ctrl')">
+      <span class="bni">🎮</span>Control
+    </button>
+    <button class="bn" id="bn-syms" onclick="tab('syms',null,'bn-syms')">
+      <span class="bni">📈</span>Símbolos
+    </button>
+    <button class="bn" id="bn-rep" onclick="tab('rep',null,'bn-rep')">
+      <span class="bni">📋</span>Reporte
+    </button>
+    <button class="bn" id="bn-acct" onclick="tab('acct',null,'bn-acct')">
+      <span class="bni">👤</span>Cuenta
+    </button>
+  </div>
+</div>
 
 <!-- ═══ MAIN ═════════════════════════════════════════════════════════════════ -->
 <main>
@@ -423,6 +513,14 @@ tbody tr:hover td{background:var(--card2)}
   <div class="sec">Señales pendientes de confirmación</div>
   <div class="sig-list" id="sigs">
     <div class="empty"><div class="ei">📡</div><div class="et">Sin señales pendientes</div><div class="es">El bot generará alertas cuando detecte oportunidades</div></div>
+  </div>
+
+  <div class="sec" style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;">
+    <span>Historial de señales</span>
+    <button class="btn btn-sm" onclick="loadSignalHistory()" style="font-size:12px;padding:4px 10px;">↻ Actualizar</button>
+  </div>
+  <div id="sig-history">
+    <div class="empty"><div class="ei">📋</div><div class="et">Cargando historial...</div></div>
   </div>
 </div>
 
@@ -451,47 +549,111 @@ tbody tr:hover td{background:var(--card2)}
     </div>
     <div class="card">
       <h3>💹 Trading M1</h3>
-      <div class="sub">Busca entradas RSI + breakout de 3 velas en M1. Genera señales para que apruebes antes de ejecutar.</div>
+      <div class="sub">Busca entradas RSI + breakout de 3 velas en M1.</div>
       <div class="btn-pair">
         <button class="btn btn-green" onclick="bact('trading/start')">▶ Iniciar</button>
         <button class="btn btn-amber" onclick="bact('trading/stop')">⏸ Pausar</button>
       </div>
     </div>
-  </div>
-
-  <div class="card" style="margin-top:12px">
-    <h3>🔁 Modo automático por horario</h3>
-    <div class="sub">Cancela el control manual y deja que el bot siga los horarios configurados abajo.</div>
-    <button class="btn btn-blue btn-full" onclick="bact('auto')">⏰ Activar modo automático ahora</button>
-  </div>
-
-  <div class="sec">Horarios de operación</div>
-  <div class="card">
-    <h3>⏱ Configurar ventanas de tiempo</h3>
-    <div class="sub">Formato 24h. Al guardar, el bot volverá a modo automático y respetará estos horarios.</div>
-    <div class="hours-grid">
-      <div class="field"><label>Inicio análisis</label><input type="number" id="h-a" min="0" max="23" placeholder="15" oninput="hintHours()"/></div>
-      <div class="field"><label>Inicio trading</label><input type="number" id="h-t" min="0" max="23" placeholder="20" oninput="hintHours()"/></div>
-      <div class="field"><label>Fin trading</label><input type="number" id="h-e" min="1" max="24" placeholder="24" oninput="hintHours()"/></div>
+    <div class="card" style="margin-top:12px">
+      <h3>⚡ Modo de ejecución</h3>
+      <div class="sub" id="exec-mode-desc">Cargando...</div>
+      <div class="btn-pair" style="margin-top:10px">
+        <button class="btn btn-green" id="btn-exec-auto" onclick="setExecMode('auto')">🤖 Automático</button>
+        <button class="btn btn-blue" id="btn-exec-confirm" onclick="setExecMode('confirm')">🎮 Confirmar</button>
+      </div>
     </div>
-    <div class="hours-hint" id="hours-hint">Completa los campos para ver el resumen.</div>
-    <button class="btn btn-accent btn-full" style="margin-top:14px" onclick="saveHours()">💾 Guardar horarios</button>
+  </div>
+
+</div>
+
+<!-- ─── SÍMBOLOS ──────────────────────────────────────────────────────────── -->
+<div class="panel" id="p-syms">
+  <div class="sec">Agregar índice / instrumento</div>
+  <div class="card" style="margin-bottom:16px">
+    <h3>➕ Buscar y agregar instrumento</h3>
+    <div class="sub">Escribe el nombre o descripción — se busca directamente en los símbolos disponibles en tu cuenta MT5.</div>
+    <div class="field">
+      <label>Buscar símbolo</label>
+      <input type="text" id="sym-search" placeholder="Ej: Crash, Boom, Volatility, Gold..." oninput="searchSymbols()" autocomplete="off"/>
+    </div>
+    <div id="sym-results" style="display:none;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;max-height:220px;overflow-y:auto"></div>
+    <div id="sym-selected" style="display:none;padding:10px 14px;background:var(--accentBg);border:1.5px solid var(--accent);border-radius:8px;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:2px">Seleccionado:</div>
+      <div style="font-weight:800" id="sym-sel-name"></div>
+      <div style="font-size:12px;color:var(--txt2)" id="sym-sel-desc"></div>
+    </div>
+    <div class="field">
+      <label>Nombre para mostrar (opcional)</label>
+      <input type="text" id="sym-display" placeholder="Ej: Crash 500, Oro, Nasdaq"/>
+    </div>
+    <div class="field" style="margin-bottom:14px">
+      <label>Categoría</label>
+      <select id="sym-cat" style="padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--card2);color:var(--txt);font-size:14px;font-family:inherit;outline:none">
+        <option value="synthetic">Índice sintético (Crash, Boom, Volatility...)</option>
+        <option value="cash">Índice cash (US30, NAS100...)</option>
+        <option value="forex">Forex (EURUSD, GBPUSD...)</option>
+        <option value="commodity">Commodity (Oro, Petróleo...)</option>
+        <option value="crypto">Crypto (BTCUSD...)</option>
+      </select>
+    </div>
+    <button class="btn btn-accent btn-full" onclick="addSymbol()">Agregar instrumento al bot</button>
+  </div>
+
+  <div class="sec" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>Instrumentos configurados</span>
+    <button class="btn btn-sm" id="sync-btn" onclick="syncMarketWatch()" style="font-size:12px;padding:4px 10px;">⬇ Sync Market Watch</button>
+  </div>
+  <div id="sym-list">
+    <div class="empty"><div class="ei">📊</div><div class="et">Cargando...</div></div>
   </div>
 </div>
 
 <!-- ─── REPORTE ───────────────────────────────────────────────────────────── -->
 <div class="panel" id="p-rep">
-  <div class="toggle-row">
-    <button class="tog on" onclick="loadRep(3.5,this)">Últimas 84h</button>
-    <button class="tog" onclick="loadRep(7,this)">7 días</button>
+
+  <!-- Filtros de rango -->
+  <div class="rep-filters">
+    <div class="toggle-row" id="rep-quick-btns">
+      <button class="tog on" onclick="loadRep(1,this)">Hoy</button>
+      <button class="tog" onclick="loadRep(2,this)">48h</button>
+      <button class="tog" onclick="loadRep(3,this)">3 días</button>
+      <button class="tog" onclick="loadRep(7,this)">7 días</button>
+      <button class="tog" id="tog-custom" onclick="toggleCustomRange()">📅 Personalizado</button>
+    </div>
+    <div id="custom-range" style="display:none;margin-top:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div class="field" style="margin-bottom:0;flex:1;min-width:130px">
+          <label>Desde</label>
+          <input type="date" id="rep-from" style="padding:9px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--card2);color:var(--txt);font-size:13px"/>
+        </div>
+        <div class="field" style="margin-bottom:0;flex:1;min-width:130px">
+          <label>Hasta</label>
+          <input type="date" id="rep-to" style="padding:9px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--card2);color:var(--txt);font-size:13px"/>
+        </div>
+        <button class="btn btn-accent" onclick="loadRepCustom()">Buscar</button>
+      </div>
+    </div>
   </div>
+
+  <!-- Tarjetas resumen -->
   <div class="rep-grid" id="rep-sum"></div>
-  <div class="sec">Historial de trades</div>
-  <div class="tbl-wrap">
-    <table><thead><tr>
-      <th>Símbolo</th><th>Dir.</th><th>Apertura</th><th>Entrada</th><th>Cierre</th><th>PnL</th><th>Resultado</th>
-    </tr></thead><tbody id="rep-tbl"></tbody></table>
+
+  <!-- Gráficas -->
+  <div class="grid2" style="margin-bottom:20px" id="rep-charts-wrap">
+    <div class="card" style="padding:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Curva de PnL</div>
+      <canvas id="chart-pnl" height="160"></canvas>
+    </div>
+    <div class="card" style="padding:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Resultados por símbolo</div>
+      <canvas id="chart-sym" height="160"></canvas>
+    </div>
   </div>
+
+  <!-- Tabla historial (mobile: tarjetas) -->
+  <div class="sec">Historial de trades</div>
+  <div id="rep-trades"></div>
 </div>
 
 <!-- ─── CUENTA ────────────────────────────────────────────────────────────── -->
@@ -547,15 +709,23 @@ function toast(msg,cls='b'){
 }
 
 /* ─── Tabs ──────────────────────────────────────────────────────────────── */
-const PANELS = {dash:'p-dash',ctrl:'p-ctrl',rep:'p-rep',acct:'p-acct'};
-function tab(name,btn){
+const PANELS = {dash:'p-dash',ctrl:'p-ctrl',syms:'p-syms',rep:'p-rep',acct:'p-acct'};
+function tab(name, btn, bnId){
+  // panels
   Object.values(PANELS).forEach(id=>document.getElementById(id).classList.remove('on'));
-  document.querySelectorAll('.t').forEach(b=>b.classList.remove('on'));
   document.getElementById(PANELS[name]).classList.add('on');
+  // top nav tabs
+  document.querySelectorAll('.t').forEach(b=>b.classList.remove('on'));
   if(btn) btn.classList.add('on');
+  // bottom nav
+  document.querySelectorAll('.bn').forEach(b=>b.classList.remove('on'));
+  const bnTarget = bnId ? document.getElementById(bnId) : document.getElementById('bn-'+name);
+  if(bnTarget) bnTarget.classList.add('on');
+  // lazy loads
   if(name==='rep') loadRep(3.5, document.querySelector('.tog'));
   if(name==='ctrl') loadBotState();
   if(name==='acct') loadConn();
+  if(name==='syms') loadSymbols();
 }
 
 /* ─── Wizard ────────────────────────────────────────────────────────────── */
@@ -625,13 +795,21 @@ async function wizEnablePush(){
 function wizFinish(){
   document.getElementById('wizard-overlay').style.display='none';
   localStorage.setItem('tb-wiz','done');
-  loadStats(); loadSignals(); loadBotState();
+  loadStats(); loadSignals(); loadSignalHistory(); loadBotState();
 }
-(()=>{
-  if(localStorage.getItem('tb-wiz')==='done'){
-    document.getElementById('wizard-overlay').style.display='none';
-    loadStats(); loadSignals(); loadBotState();
+// Al cargar: si MT5 ya está conectado → skip wizard sin importar el dispositivo
+(async()=>{
+  try{
+    const r = await fetch('/api/connection');
+    const d = await r.json();
+    if(d.connected || localStorage.getItem('tb-wiz')==='done'){
+      document.getElementById('wizard-overlay').style.display='none';
+    }
+  }catch(e){
+    if(localStorage.getItem('tb-wiz')==='done')
+      document.getElementById('wizard-overlay').style.display='none';
   }
+  loadStats(); loadSignals(); loadSignalHistory(); loadBotState();
 })();
 
 /* ─── Stats ─────────────────────────────────────────────────────────────── */
@@ -669,20 +847,27 @@ async function loadBotState(){
       sub.textContent='Actualizando contexto EMA50/200 en M15';
     } else {
       dot.className='dot grey'; title.textContent='Bot inactivo';
-      sub.textContent=d.manual_mode?'Detenido manualmente':'Fuera del horario configurado';
+      sub.textContent='Bot detenido — activa análisis o trading desde el panel';
     }
-    chip.innerHTML=d.manual_mode
-      ?'<span class="chip manual">⚙ Manual</span>'
-      :'<span class="chip auto">⏰ Automático</span>';
-    document.getElementById('h-a').value=d.analysis_start;
-    document.getElementById('h-t').value=d.trading_start;
-    document.getElementById('h-e').value=d.trading_end;
-    hintHours();
+    chip.innerHTML=d.execution_auto
+      ?'<span class="chip auto">🤖 Auto</span>'
+      :'<span class="chip manual">🎮 Confirmar</span>';
+    // exec mode buttons
+    const descEl=document.getElementById('exec-mode-desc');
+    const btnAuto=document.getElementById('btn-exec-auto');
+    const btnConf=document.getElementById('btn-exec-confirm');
+    if(d.execution_auto){
+      descEl.textContent='Modo automático — bot ejecuta señales sin confirmación.';
+      btnAuto.style.opacity='1'; btnConf.style.opacity='0.45';
+    } else {
+      descEl.textContent='Modo confirmación — señal llega al dashboard y espera tu clic.';
+      btnAuto.style.opacity='0.45'; btnConf.style.opacity='1';
+    }
     // dashboard stat card
     const phEl=document.getElementById('s-ph');
     phEl.textContent=d.trading_enabled?'Trading':d.analysis_enabled?'Análisis':'Off';
     phEl.className='sc-val '+(d.trading_enabled?'g':d.analysis_enabled?'':'r');
-    document.getElementById('s-ph2').textContent=d.manual_mode?'modo manual':'modo automático';
+    document.getElementById('s-ph2').textContent=d.execution_auto?'modo automático':'modo confirmación';
   }catch(e){}
 }
 
@@ -693,6 +878,13 @@ function hintHours(){
   const el=document.getElementById('hours-hint');
   if(a&&t&&e)
     el.innerHTML=`📊 Análisis: <b>${a}:00 → ${t}:00</b> &nbsp;&nbsp; 💹 Trading: <b>${t}:00 → ${e==24?'00:00':e+':00'}</b>`;
+}
+
+async function setExecMode(mode){
+  const url = mode==='auto' ? '/api/bot/execution/auto' : '/api/bot/execution/confirm';
+  await fetch(url,{method:'POST'});
+  toast(mode==='auto'?'🤖 Modo automático activado':'🎮 Modo confirmación activado','g');
+  loadBotState();
 }
 
 async function bact(action){
@@ -742,7 +934,7 @@ async function loadSignals(){
             <div class="pi"><div class="pl">Stop Loss</div><div class="pv sl">${(+s.sl).toFixed(2)}</div></div>
             <div class="pi"><div class="pl">Take Profit</div><div class="pv tp">${(+s.tp).toFixed(2)}</div></div>
           </div>
-          <div class="sig-meta">RSI: <b>${s.rsi_value?(+s.rsi_value).toFixed(1):'—'}</b> &nbsp;|&nbsp; Lote: <b>${s.lot_size?(+s.lot_size).toFixed(2):'—'}</b></div>
+          <div class="sig-meta">RSI: <b>${s.rsi_value?(+s.rsi_value).toFixed(1):'—'}</b> &nbsp;|&nbsp; Lote: <b>${s.lot_size?(+s.lot_size).toFixed(2):'—'}</b> &nbsp;|&nbsp; Score: <b style="color:var(--accent)">${s.score!=null?(+s.score).toFixed(0)+'/100':'—'}</b></div>
         </div>
         <div class="sig-actions">
           <button class="btn btn-accent" onclick="confirmSig(${s.id})">✓ Confirmar</button>
@@ -761,12 +953,126 @@ async function rejectSig(id){
   toast('Señal rechazada','b'); loadSignals();
 }
 
-/* ─── Report ─────────────────────────────────────────────────────────────── */
-async function loadRep(days,btn){
-  if(btn){document.querySelectorAll('.tog').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+const _statusLabel = {
+  pending:   {txt:'⏳ Pendiente',  cls:'amber'},
+  confirmed: {txt:'✔ Confirmada', cls:'blue'},
+  executed:  {txt:'🟢 Ejecutada',  cls:'green'},
+  closed:    {txt:'🏁 Cerrada',    cls:'green'},
+  rejected:  {txt:'✕ Rechazada',  cls:''},
+  failed:    {txt:'❌ Fallida',    cls:'red'},
+};
+async function loadSignalHistory(){
+  const el = document.getElementById('sig-history');
   try{
-    const r=await fetch('/api/report?days='+days); const d=await r.json();
-    const s=d.summary||{};
+    const r = await fetch('/api/signals/history?limit=30');
+    const sigs = await r.json();
+    if(!sigs.length){
+      el.innerHTML='<div class="empty"><div class="ei">📋</div><div class="et">Sin señales aún</div></div>';
+      return;
+    }
+    el.innerHTML = sigs.map(s=>{
+      const st = _statusLabel[s.status] || {txt: s.status, cls:''};
+      const dir = s.direction==='buy'?'▲ BUY':'▼ SELL';
+      const ts = s.timestamp ? new Date(s.timestamp).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+          <span class="chip ${s.direction==='buy'?'buy':'sell'}" style="font-size:11px;">${dir}</span>
+          <span style="font-weight:600;">${s.symbol}</span>
+          <span style="color:var(--txt2);font-size:11px;">${ts}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          ${s.score!=null?`<span style="color:var(--accent);font-size:11px;font-weight:600;">${(+s.score).toFixed(0)}/100</span>`:''}
+          <span class="chip ${st.cls}" style="font-size:11px;">${st.txt}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML='<div class="empty"><div class="ei">⚠️</div><div class="et">Error cargando historial</div></div>';
+  }
+}
+
+async function loadTradesHistory(){
+  const el = document.getElementById('rep-trades');
+  if(!el) return;
+  try{
+    const r = await fetch('/api/performance?days=30');
+    const d = await r.json();
+    const trades = d.trades || [];
+    if(!trades.length){
+      el.innerHTML='<div class="empty"><div class="ei">📋</div><div class="et">Sin trades cerrados aún</div></div>';
+      return;
+    }
+    el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="background:var(--card2);text-align:left;">
+        <th style="padding:8px 10px;">Símbolo</th>
+        <th style="padding:8px 10px;">Dir</th>
+        <th style="padding:8px 10px;">Apertura</th>
+        <th style="padding:8px 10px;">Cierre</th>
+        <th style="padding:8px 10px;">Profit</th>
+        <th style="padding:8px 10px;">Resultado</th>
+      </tr></thead>
+      <tbody>${trades.map(t=>{
+        const open = t.open_time ? new Date(t.open_time).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—';
+        const close = t.close_time ? new Date(t.close_time).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—';
+        const profit = (t.profit||0).toFixed(2);
+        const win = t.result === 'win';
+        const dir = t.direction === 'buy' ? '▲ BUY' : '▼ SELL';
+        return `<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:8px 10px;font-weight:600;">${t.symbol||'—'}</td>
+          <td style="padding:8px 10px;"><span class="chip ${t.direction==='buy'?'buy':'sell'}" style="font-size:11px;">${dir}</span></td>
+          <td style="padding:8px 10px;color:var(--txt2);">${open}</td>
+          <td style="padding:8px 10px;color:var(--txt2);">${close}</td>
+          <td style="padding:8px 10px;font-weight:700;color:${win?'#22c55e':'#ef4444'};">${win?'+':''}$${profit}</td>
+          <td style="padding:8px 10px;"><span class="chip ${win?'exec':'rej'}" style="font-size:11px;">${win?'✅ WIN':'❌ LOSS'}</span></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }catch(e){
+    el.innerHTML='<div class="empty"><div class="ei">⚠️</div><div class="et">Error cargando trades</div></div>';
+  }
+}
+
+/* ─── Report ─────────────────────────────────────────────────────────────── */
+let _chartPnl = null, _chartSym = null;
+
+function toggleCustomRange(){
+  const el = document.getElementById('custom-range');
+  const show = el.style.display === 'none';
+  el.style.display = show ? 'block' : 'none';
+  if(show){
+    // default: últimos 7 días
+    const today = new Date();
+    const from  = new Date(today); from.setDate(from.getDate()-7);
+    document.getElementById('rep-from').value = from.toISOString().slice(0,10);
+    document.getElementById('rep-to').value   = today.toISOString().slice(0,10);
+    document.querySelectorAll('.tog').forEach(b=>b.classList.remove('on'));
+    document.getElementById('tog-custom').classList.add('on');
+  }
+}
+
+function loadRepCustom(){
+  const f = document.getElementById('rep-from').value;
+  const t = document.getElementById('rep-to').value;
+  if(!f||!t){toast('Selecciona ambas fechas','r');return;}
+  _renderRep(fetch(`/api/report?date_from=${f}&date_to=${t}`));
+}
+
+async function loadRep(days, btn){
+  if(btn){
+    document.querySelectorAll('.tog').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+  document.getElementById('custom-range').style.display='none';
+  _renderRep(fetch('/api/report?days='+days));
+}
+
+async function _renderRep(fetchPromise){
+  try{
+    const r = await fetchPromise;
+    const d = await r.json();
+    const s = d.summary || {};
+
+    // Tarjetas resumen
     document.getElementById('rep-sum').innerHTML=`
       <div class="rc"><div class="rl">Trades</div><div class="rv">${s.total_trades||0}</div></div>
       <div class="rc"><div class="rl">Ganados</div><div class="rv" style="color:var(--green)">${s.wins||0}</div></div>
@@ -774,19 +1080,96 @@ async function loadRep(days,btn){
       <div class="rc"><div class="rl">Win rate</div><div class="rv">${s.win_rate!=null?s.win_rate.toFixed(1)+'%':'—'}</div></div>
       <div class="rc"><div class="rl">PnL total</div><div class="rv" style="color:${(s.total_pnl||0)>=0?'var(--green)':'var(--red)'}">${s.total_pnl!=null?((s.total_pnl>=0?'+':'')+s.total_pnl.toFixed(2)):'—'}</div></div>
     `;
-    const trs=d.trades||[];
-    document.getElementById('rep-tbl').innerHTML=trs.length
-      ?trs.map(t=>`<tr>
-        <td><b>${t.symbol||'—'}</b></td>
-        <td><span class="chip ${t.direction==='buy'?'buy':'sell'}" style="font-size:10px">${(t.direction||'').toUpperCase()}</span></td>
-        <td style="color:var(--txt2)">${t.open_time?new Date(t.open_time).toLocaleString('es-CO'):'—'}</td>
-        <td>${t.open_price!=null?(+t.open_price).toFixed(2):'—'}</td>
-        <td>${t.close_price!=null?(+t.close_price).toFixed(2):'—'}</td>
-        <td style="font-weight:700;color:${(t.profit||0)>=0?'var(--green)':'var(--red)'}">${t.profit!=null?((t.profit>=0?'+':'')+((+t.profit).toFixed(2))):'—'}</td>
-        <td><span class="chip ${t.result==='win'?'buy':'sell'}" style="font-size:10px">${t.result||'—'}</span></td>
-      </tr>`).join('')
-      :'<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">Sin trades en este período</td></tr>';
-  }catch(e){}
+
+    // Colores del tema
+    const cs = getComputedStyle(document.documentElement);
+    const green = cs.getPropertyValue('--green').trim();
+    const red   = cs.getPropertyValue('--red').trim();
+    const accent= cs.getPropertyValue('--accent').trim();
+    const txt2  = cs.getPropertyValue('--txt2').trim();
+
+    // Gráfica PnL curva
+    const curve = d.pnl_curve || [];
+    if(_chartPnl) _chartPnl.destroy();
+    _chartPnl = new Chart(document.getElementById('chart-pnl'), {
+      type: 'line',
+      data: {
+        labels: curve.map(p => new Date(p.time).toLocaleDateString('es-CO',{month:'short',day:'numeric'})),
+        datasets:[{
+          label:'PnL acumulado',
+          data: curve.map(p => p.pnl),
+          borderColor: accent, backgroundColor: accent+'22',
+          fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5,
+        }]
+      },
+      options:{responsive:true,plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:txt2,font:{size:10}},grid:{display:false}},
+                y:{ticks:{color:txt2,font:{size:10}},grid:{color:txt2+'22'}}}}
+    });
+
+    // Gráfica por símbolo (barras apiladas wins/losses)
+    const syms = d.by_symbol || [];
+    if(_chartSym) _chartSym.destroy();
+    if(syms.length){
+      _chartSym = new Chart(document.getElementById('chart-sym'), {
+        type:'bar',
+        data:{
+          labels: syms.map(s=>s.symbol),
+          datasets:[
+            {label:'Ganados', data:syms.map(s=>s.wins), backgroundColor:green+'cc'},
+            {label:'Perdidos',data:syms.map(s=>s.losses),backgroundColor:red+'cc'},
+          ]
+        },
+        options:{responsive:true,plugins:{legend:{labels:{color:txt2,font:{size:11}}}},
+          scales:{x:{stacked:true,ticks:{color:txt2,font:{size:10}},grid:{display:false}},
+                  y:{stacked:true,ticks:{color:txt2,font:{size:10}},grid:{color:txt2+'22'}}}}
+      });
+    } else {
+      document.getElementById('chart-sym').getContext('2d').clearRect(0,0,9999,9999);
+    }
+
+    // Historial — tabla desktop + tarjetas mobile
+    const trades = d.trades || [];
+    const tradesHtml = trades.length ? trades : [];
+
+    // Desktop: tabla
+    const tblHtml = tradesHtml.length
+      ? tradesHtml.map(t=>`<tr>
+          <td><b>${t.symbol||'—'}</b></td>
+          <td><span class="chip ${t.direction==='buy'?'buy':'sell'}" style="font-size:10px">${(t.direction||'').toUpperCase()}</span></td>
+          <td style="color:var(--txt2);font-size:12px">${t.open_time?new Date(t.open_time).toLocaleString('es-CO'):'—'}</td>
+          <td>${t.open_price!=null?(+t.open_price).toFixed(2):'—'}</td>
+          <td>${t.close_price!=null?(+t.close_price).toFixed(2):'—'}</td>
+          <td style="font-weight:700;color:${(t.profit||0)>=0?'var(--green)':'var(--red)'}">${t.profit!=null?((t.profit>=0?'+':'')+((+t.profit).toFixed(2))):'—'}</td>
+          <td><span class="chip ${t.result==='win'?'buy':'sell'}" style="font-size:10px">${t.result||'—'}</span></td>
+        </tr>`).join('')
+      : '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">Sin trades en este período</td></tr>';
+
+    // Mobile: tarjetas
+    const cardsHtml = tradesHtml.length
+      ? tradesHtml.map(t=>`
+        <div class="trade-card">
+          <div class="tc-top">
+            <span class="chip ${t.direction==='buy'?'buy':'sell'}" style="font-size:10px">${(t.direction||'').toUpperCase()}</span>
+            <span class="tc-sym">${t.symbol||'—'}</span>
+            <span class="tc-ts">${t.open_time?new Date(t.open_time).toLocaleString('es-CO',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—'}</span>
+          </div>
+          <div class="tc-row"><span class="tc-lbl">Entrada</span><span class="tc-val">${t.open_price!=null?(+t.open_price).toFixed(2):'—'}</span></div>
+          <div class="tc-row"><span class="tc-lbl">Cierre</span><span class="tc-val">${t.close_price!=null?(+t.close_price).toFixed(2):'—'}</span></div>
+          <div class="tc-row"><span class="tc-lbl">PnL</span><span class="tc-val" style="color:${(t.profit||0)>=0?'var(--green)':'var(--red)'}">${t.profit!=null?((t.profit>=0?'+':'')+((+t.profit).toFixed(2))):'—'}</span></div>
+          <div class="tc-row" style="border:none"><span class="tc-lbl">Resultado</span><span class="chip ${t.result==='win'?'buy':'sell'}" style="font-size:10px">${t.result||'—'}</span></div>
+        </div>`).join('')
+      : '<div class="empty"><div class="ei">📋</div><div class="et">Sin trades en este período</div></div>';
+
+    document.getElementById('rep-trades').innerHTML = `
+      <div class="tbl-wrap">
+        <table><thead><tr>
+          <th>Símbolo</th><th>Dir.</th><th>Apertura</th><th>Entrada</th><th>Cierre</th><th>PnL</th><th>Resultado</th>
+        </tr></thead><tbody>${tblHtml}</tbody></table>
+      </div>
+      <div class="trade-cards">${cardsHtml}</div>
+    `;
+  }catch(e){console.error(e);}
 }
 
 /* ─── Account ────────────────────────────────────────────────────────────── */
@@ -868,9 +1251,175 @@ function b64(s){
     if(sub)setPushUI(true);}catch(e){}
 })();
 
+/* ─── Symbols ────────────────────────────────────────────────────────────── */
+const CAT_ICON = {synthetic:'🤖',cash:'📈',forex:'💱',commodity:'🥇',crypto:'₿'};
+const CAT_LABEL = {synthetic:'Sintético',cash:'Índice cash',forex:'Forex',commodity:'Commodity',crypto:'Crypto'};
+
+async function loadSymbols(){
+  try{
+    const [symR, ctxR] = await Promise.all([fetch('/api/symbols'), fetch('/api/symbols-context')]);
+    const syms = await symR.json();
+    const ctxArr = await ctxR.json();
+    const ctxMap = {};
+    ctxArr.forEach(c => ctxMap[c.name] = c);
+    const el = document.getElementById('sym-list');
+    if(!syms.length){
+      el.innerHTML='<div class="empty"><div class="ei">📊</div><div class="et">Sin instrumentos</div><div class="es">Agrega un símbolo arriba</div></div>';
+      return;
+    }
+    el.innerHTML = syms.map(s => {
+      const ctx = ctxMap[s.name] || {};
+      const bias = ctx.bias || '—';
+      const biasCls = bias==='bull'?'bull':bias==='bear'?'bear':bias==='neutral'?'neutral':'unknown';
+      const biasLabel = bias==='bull'?'▲ Alcista':bias==='bear'?'▼ Bajista':bias==='neutral'?'Lateral':'Sin datos';
+      return `
+      <div class="sym-card ${s.active?'':'inactive'}" id="symcard-${s.id}">
+        <div class="sym-icon">${CAT_ICON[s.category]||'📊'}</div>
+        <div class="sym-info">
+          <div class="sym-name">${s.display_name} <span style="font-weight:400;font-size:12px;color:var(--txt3)">${s.name}</span></div>
+          <div class="sym-meta">${CAT_LABEL[s.category]||s.category}</div>
+          <div class="sym-bias">
+            <span class="bias-pill ${biasCls}">${biasLabel}</span>
+            ${ctx.ema_fast?`<span style="font-size:11px;color:var(--txt3)">EMA50: ${ctx.ema_fast.toFixed(2)} · EMA200: ${ctx.ema_slow.toFixed(2)}</span>`:''}
+          </div>
+        </div>
+        <div class="sym-actions">
+          <label class="sw-wrap" title="${s.active?'Activo':'Inactivo'}">
+            <label class="sw">
+              <input type="checkbox" ${s.active?'checked':''} onchange="toggleSym(${s.id}, this.checked)"/>
+              <span class="sw-slider"></span>
+            </label>
+          </label>
+          <button class="btn btn-sm" style="background:var(--redBg);color:var(--red);border:1px solid var(--red)"
+                  onclick="deleteSym(${s.id},'${s.display_name}')">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('sym-list').innerHTML=
+      '<div class="empty"><div class="ei">⚠️</div><div class="et">Error cargando símbolos</div><div class="es">Verifica que el bot esté corriendo</div></div>';
+    console.error(e);
+  }
+}
+
+let _symSelected = null;
+let _searchTimer = null;
+
+async function searchSymbols(){
+  const q = document.getElementById('sym-search').value.trim();
+  clearTimeout(_searchTimer);
+  if(q.length < 2){
+    document.getElementById('sym-results').style.display='none';
+    return;
+  }
+  _searchTimer = setTimeout(async()=>{
+    try{
+      const r = await fetch('/api/mt5-symbols?q='+encodeURIComponent(q));
+      const items = await r.json();
+      const el = document.getElementById('sym-results');
+      if(!items.length){
+        el.style.display='block';
+        el.innerHTML='<div style="padding:12px 16px;color:var(--txt3);font-size:13px">Sin resultados en MT5</div>';
+        return;
+      }
+      el.style.display='block';
+      el.innerHTML = items.map(s=>`
+        <div onclick="selectSymbol('${s.name}','${s.description.replace(/'/g,"\\'")}','${s.category}')"
+             style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);
+                    display:flex;justify-content:space-between;align-items:center;font-size:13px;
+                    background:var(--card);transition:background .1s"
+             onmouseover="this.style.background='var(--card2)'"
+             onmouseout="this.style.background='var(--card)'">
+          <div>
+            <div style="font-weight:700">${s.name}</div>
+            <div style="font-size:11px;color:var(--txt2)">${s.description}</div>
+          </div>
+          <span style="font-size:10px;color:var(--txt3)">${s.category}</span>
+        </div>`).join('');
+    }catch(e){
+      document.getElementById('sym-results').style.display='none';
+    }
+  }, 300);
+}
+
+function selectSymbol(name, desc, cat){
+  _symSelected = name;
+  document.getElementById('sym-results').style.display='none';
+  document.getElementById('sym-search').value = name;
+  document.getElementById('sym-selected').style.display='block';
+  document.getElementById('sym-sel-name').textContent = name;
+  document.getElementById('sym-sel-desc').textContent = desc;
+  if(!document.getElementById('sym-display').value)
+    document.getElementById('sym-display').value = desc || name;
+  // auto-categoría
+  const n = name.toLowerCase();
+  const sel = document.getElementById('sym-cat');
+  if(n.includes('crash')||n.includes('boom')||n.includes('volatility')||n.includes('bull')||n.includes('bear')||n.includes('step')||n.includes('jump'))
+    sel.value='synthetic';
+  else if(n.includes('us30')||n.includes('nas')||n.includes('spx')||n.includes('dax'))
+    sel.value='cash';
+  else if(n.includes('xau')||n.includes('xag')||n.includes('oil')||n.includes('wti'))
+    sel.value='commodity';
+  else if(n.includes('btc')||n.includes('eth')||n.includes('crypto'))
+    sel.value='crypto';
+  else sel.value='forex';
+}
+
+async function addSymbol(){
+  const name = _symSelected || document.getElementById('sym-search').value.trim();
+  const display = document.getElementById('sym-display').value.trim();
+  const cat = document.getElementById('sym-cat').value;
+  if(!name){toast('Busca y selecciona un símbolo primero','r');return;}
+  toast('Agregando...','b');
+  try{
+    const r = await fetch('/api/symbols',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name, display_name:display||name, category:cat})});
+    const d = await r.json();
+    if(d.ok){
+      toast(`✅ ${display||name} agregado`,'g');
+      _symSelected=null;
+      document.getElementById('sym-search').value='';
+      document.getElementById('sym-display').value='';
+      document.getElementById('sym-selected').style.display='none';
+      loadSymbols();
+    } else toast('❌ '+d.error,'r');
+  }catch(e){toast('Error de red','r');}
+}
+
+async function syncMarketWatch(){
+  const btn = document.getElementById('sync-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sincronizando...';
+  try{
+    const r = await fetch('/api/symbols/sync-market-watch',{method:'POST'});
+    const d = await r.json();
+    if(d.ok){
+      toast(`✅ ${d.added} símbolos importados de Market Watch`,'g');
+      loadSymbols();
+    } else toast('❌ '+d.error,'r');
+  }catch(e){toast('Error de red','r');}
+  finally{
+    btn.disabled = false;
+    btn.textContent = '⬇ Sync Market Watch';
+  }
+}
+
+async function toggleSym(id, active){
+  await fetch(`/api/symbols/${id}/toggle?active=${active}`,{method:'POST'});
+  toast(active?'Símbolo activado':'Símbolo pausado', active?'g':'b');
+  loadSymbols();
+}
+
+async function deleteSym(id, name){
+  if(!confirm(`¿Eliminar ${name}? Se perderá el historial asociado.`))return;
+  await fetch(`/api/symbols/${id}`,{method:'DELETE'});
+  toast(`${name} eliminado`,'b');
+  loadSymbols();
+}
+
 /* ─── Polling ────────────────────────────────────────────────────────────── */
-loadStats(); loadSignals(); loadBotState();
-setInterval(()=>{loadStats();loadSignals();loadBotState();},10000);
+loadStats(); loadSignals(); loadSignalHistory(); loadBotState(); loadTradesHistory();
+setInterval(()=>{loadStats();loadSignals();loadSignalHistory();loadBotState();loadTradesHistory();},10000);
 </script>
 </body>
 </html>

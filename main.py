@@ -30,12 +30,12 @@ def main():
     push_service.init_keys()
     print("[MAIN] Base de datos lista.")
 
-    # 2. Conexión MT5
+    # 2. Conexión MT5 (opcional al arranque — se puede conectar desde el dashboard)
     try:
         mt5_connector.connect()
     except RuntimeError as e:
-        print(f"[MAIN] ❌ Error conectando a MT5: {e}")
-        sys.exit(1)
+        print(f"[MAIN] ⚠️  MT5 no conectado al arranque: {e}")
+        print("[MAIN]    → Conéctate desde el dashboard (tab Cuenta) para operar.")
 
     # 3. Hilo del scheduler
     t = threading.Thread(target=_run_scheduler, daemon=True, name="scheduler")

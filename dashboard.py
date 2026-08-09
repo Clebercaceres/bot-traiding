@@ -75,6 +75,11 @@ def connect_account(req: ConnectRequest):
             return {"ok": False, "error": f"Login fallido: {mt5.last_error()}"}
 
         info = mt5.account_info()
+
+        # Detectar broker y activar símbolos automáticamente
+        broker = mt5_connector.detect_broker()
+        db.activate_symbols_for_broker(broker)
+
         return {
             "ok": True,
             "login": info.login,
@@ -82,6 +87,7 @@ def connect_account(req: ConnectRequest):
             "balance": info.balance,
             "currency": info.currency,
             "name": info.name,
+            "broker": broker,
         }
     except Exception as e:
         return {"ok": False, "error": str(e)}
@@ -135,8 +141,12 @@ def get_stats():
 
 
 @app.get("/api/report")
-def get_report(days: int = 7):
-    return db.performance_report(days_back=days)
+def get_report(days: float = 7, date_from: str = None, date_to: str = None):
+    return db.performance_report(days_back=days, date_from=date_from, date_to=date_to)
+
+@app.get("/api/signals/history")
+def get_signals_history(limit: int = 50):
+    return db.get_signals_history(limit=limit)
 
 
 # ─── Push Notifications ───────────────────────────────────────────────────────
@@ -161,6 +171,114 @@ def push_unsubscribe(sub: PushSubscription):
     return {"ok": True}
 
 
+# ─── Símbolos ─────────────────────────────────────────────────────────────────
+
+class SymbolAdd(BaseModel):
+    name: str
+    display_name: str
+    category: str = "synthetic"
+
+@app.get("/api/symbols")
+def list_symbols():
+    return [dict(r) for r in db.get_all_symbols()]
+
+@app.get("/api/mt5-symbols")
+def list_mt5_symbols(q: str = ""):
+    """Lista todos los símbolos disponibles en el broker MT5, con filtro opcional."""
+    import MetaTrader5 as mt5
+    syms = mt5.symbols_get()
+    if not syms:
+        return []
+    result = []
+    q_lower = q.lower()
+    for s in syms:
+        if not q_lower or q_lower in s.name.lower() or q_lower in s.description.lower():
+            result.append({"name": s.name, "description": s.description, "category": s.path.split("\\")[0] if s.path else ""})
+    return result[:80]  # máximo 80 resultados
+
+
+@app.post("/api/symbols")
+def add_symbol(req: SymbolAdd):
+    import MetaTrader5 as mt5
+    name = req.name.strip()
+    # Activar en Market Watch y validar
+    mt5.symbol_select(name, True)
+    info = mt5.symbol_info(name)
+    if info is None:
+        return {"ok": False, "error": f"'{name}' no encontrado en MT5. Selecciónalo de la lista de disponibles."}
+    db.add_symbol(name, req.display_name.strip() or info.description or name, req.category)
+    return {"ok": True}
+
+@app.post("/api/symbols/sync-market-watch")
+def sync_market_watch():
+    """Importa todos los símbolos visibles en MT5 Market Watch al bot (inactivos por defecto)."""
+    import MetaTrader5 as mt5
+    syms = mt5.symbols_get()
+    if not syms:
+        return {"ok": False, "error": "MT5 no conectado o sin símbolos"}
+    added = 0
+    skipped = 0
+    for s in syms:
+        if not s.visible:
+            continue  # solo Market Watch
+        try:
+            category = "synthetic"
+            path = (s.path or "").lower()
+            name_l = s.name.lower()
+            if any(x in path or x in name_l for x in ["forex", "fx", "eurusd", "gbpusd"]):
+                category = "forex"
+            elif any(x in path or x in name_l for x in ["crash", "boom", "volatility", "bull", "bear", "step", "jump", "range"]):
+                category = "synthetic"
+            elif any(x in path or x in name_l for x in ["us30", "nas", "spx", "dax", "cash", "index"]):
+                category = "cash"
+            elif any(x in path or x in name_l for x in ["btc", "eth", "crypto"]):
+                category = "crypto"
+            elif any(x in path or x in name_l for x in ["gold", "xau", "oil", "silver", "commodity"]):
+                category = "commodity"
+            display = s.description or s.name
+            db.add_symbol(s.name, display, category)
+            added += 1
+        except Exception:
+            skipped += 1
+    return {"ok": True, "added": added, "skipped": skipped}
+
+@app.post("/api/symbols/{symbol_id}/toggle")
+def toggle_symbol(symbol_id: int, active: bool = True):
+    db.toggle_symbol(symbol_id, active)
+    return {"ok": True}
+
+@app.delete("/api/symbols/{symbol_id}")
+def delete_symbol(symbol_id: int):
+    db.delete_symbol(symbol_id)
+    return {"ok": True}
+
+@app.get("/api/symbols-context")
+def get_symbols_context():
+    """Devuelve el contexto M15 actual de cada símbolo activo."""
+    try:
+        from scheduler import _context_cache
+        cache = _context_cache
+    except Exception:
+        cache = {}
+    result = []
+    try:
+        rows = db.get_active_symbols()
+    except Exception:
+        return []
+    for row in rows:
+        sym = row["name"]
+        ctx = cache.get(sym, {})
+        result.append({
+            "name": sym,
+            "display_name": row["display_name"],
+            "category": row["category"],
+            "bias": ctx.get("bias", "sin datos"),
+            "ema_fast": ctx.get("ema_fast"),
+            "ema_slow": ctx.get("ema_slow"),
+        })
+    return result
+
+
 # ─── Control del Bot ──────────────────────────────────────────────────────────
 
 @app.get("/api/bot/state")
@@ -170,10 +288,20 @@ def get_bot_state():
         "manual_mode": s["manual_mode"],
         "analysis_enabled": bot_state.is_analysis_active(),
         "trading_enabled": bot_state.is_trading_active(),
-        "analysis_start": s["analysis_start"],
-        "trading_start": s["trading_start"],
-        "trading_end": s["trading_end"],
+        "execution_auto": s.get("execution_auto", False),
     }
+
+
+@app.post("/api/bot/execution/auto")
+def set_exec_auto():
+    bot_state.set_execution_auto(True)
+    return {"ok": True, "execution_auto": True}
+
+
+@app.post("/api/bot/execution/confirm")
+def set_exec_confirm():
+    bot_state.set_execution_auto(False)
+    return {"ok": True, "execution_auto": False}
 
 
 @app.post("/api/bot/analysis/start")

@@ -4,10 +4,11 @@ Todo lo que definimos en la conversación está acá. Si quieres cambiar
 horarios, riesgo, o el símbolo, este es el único archivo que debes tocar.
 """
 
-# ── Conexión MT5 (cuenta DEMO - Bridge Markets) ──────────────────────────
-MT5_LOGIN = 7916999            # tu número de cuenta demo (entero)
-MT5_PASSWORD = "R@6cJnMg"        # tu contraseña de la cuenta demo
-MT5_SERVER = "BridgeMarkets-MT5"          # nombre exacto del servidor, ej: "BridgeMarkets-Demo"
+# ── Conexión MT5 ─────────────────────────────────────────────────────────
+# Dejar vacío para conectar desde el dashboard. Rellenar para autoconectar al arrancar.
+MT5_LOGIN = 0              # ej: 7916999
+MT5_PASSWORD = ""          # ej: "R@6cJnMg"
+MT5_SERVER = ""            # ej: "BridgeMarkets-MT5"
 MT5_PATH = r"C:\Program Files\MetaTrader 5\terminal64.exe"
 
 # ── Símbolos ──────────────────────────────────────────────────────────────
@@ -35,11 +36,13 @@ ATR_SL_MULTIPLIER = 1.5   # Stop Loss = ATR * este número
 ATR_TP_MULTIPLIER = 2.5   # Take Profit = ATR * este número (RR ≈ 1:1.6)
 
 # ── Gestión de riesgo ─────────────────────────────────────────────────────
-RISK_PER_TRADE_PCT = 4.0      # % del capital arriesgado por operación (rango acordado: 3-5%)
-MAX_TRADES_PER_SESSION = 5    # tope de operaciones entre 8pm y 12am
-MIN_TRADES_TARGET = 3         # el bot prioriza calidad, no está obligado a llegar a 5
-MAX_CONSECUTIVE_LOSSES = 2    # 2 pérdidas seguidas -> se detiene la sesión
-DAILY_LOSS_LIMIT_PCT = 15.0   # -15% del capital en el día -> el bot se apaga solo
+RISK_PER_TRADE_PCT = 2.0      # cuenta real $29: riesgo conservador 2% (~$0.58/trade)
+MAX_TRADES_PER_SESSION = 15    # cuenta real: pocas entradas, solo las mejores
+MAX_CONCURRENT_TRADES = 1     # cuenta real: 1 posición a la vez, capital mínimo
+MIN_TRADES_TARGET = 2
+MIN_SIGNAL_SCORE = 65.0       # cuenta real: solo señales de alta convicción
+MAX_CONSECUTIVE_LOSSES = 4    # cuenta real: 2 pérdidas seguidas = parar la sesión
+DAILY_LOSS_LIMIT_PCT = 10.0   # cuenta real: -10% del capital (~$2.90) -> apagar
 
 # ── Modo de operación ─────────────────────────────────────────────────────
 # "confirm" = el bot solo genera la señal y ESPERA tu clic en el dashboard

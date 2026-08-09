@@ -8,15 +8,13 @@ import config
 _lock = threading.Lock()
 
 _state = {
-    # Modos activos (override manual)
+    # Modos activos (control manual desde dashboard)
     "analysis_enabled": False,   # True = estudiando M15
     "trading_enabled": False,    # True = buscando señales M1
-    # Horarios configurables (sincronizados con config en arranque)
-    "analysis_start": config.ANALYSIS_START_HOUR,
-    "trading_start": config.TRADING_START_HOUR,
-    "trading_end": config.TRADING_END_HOUR,
-    # Control manual override: si True, ignora los horarios automáticos
-    "manual_mode": False,
+    # Ejecución: True = bot ejecuta solo, False = espera confirmación del usuario
+    "execution_auto": False,
+    # Siempre en modo manual: el usuario decide cuándo analizar y operar
+    "manual_mode": True,
 }
 
 
@@ -39,6 +37,12 @@ def set_trading(enabled: bool):
         _state["manual_mode"] = True
 
 
+def set_execution_auto(auto: bool):
+    """True = bot ejecuta señales automáticamente. False = espera confirmación."""
+    with _lock:
+        _state["execution_auto"] = auto
+
+
 def set_hours(analysis_start: int, trading_start: int, trading_end: int):
     with _lock:
         _state["analysis_start"] = analysis_start
@@ -59,27 +63,14 @@ def stop_all():
 
 
 def auto_mode():
-    """Vuelve a respetar los horarios configurados."""
+    """Mantiene manual_mode=True; el usuario controla análisis y trading desde el dashboard."""
     with _lock:
-        _state["manual_mode"] = False
+        _state["manual_mode"] = True
 
 
 def is_analysis_active() -> bool:
-    """Devuelve si el análisis debe correr ahora (manual o por horario)."""
-    from datetime import datetime
-    s = get()
-    if s["manual_mode"]:
-        return s["analysis_enabled"]
-    h = datetime.now().hour + datetime.now().minute / 60
-    return s["analysis_start"] <= h < s["trading_end"]
+    return get()["analysis_enabled"]
 
 
 def is_trading_active() -> bool:
-    """Devuelve si el trading debe correr ahora (manual o por horario)."""
-    from datetime import datetime
-    s = get()
-    if s["manual_mode"]:
-        return s["trading_enabled"]
-    h = datetime.now().hour + datetime.now().minute / 60
-    end = s["trading_end"] if s["trading_end"] != 24 else 24
-    return s["trading_start"] <= h < end
+    return get()["trading_enabled"]
