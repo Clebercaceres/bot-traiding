@@ -48,6 +48,7 @@ def get_account_balance():
 
 def get_candles(symbol, timeframe_str, count=300):
     tf = TIMEFRAME_MAP[timeframe_str]
+    mt5.symbol_select(symbol, True)  # asegura que esté en Market Watch
     rates = mt5.copy_rates_from_pos(symbol, tf, 0, count)
     if rates is None or len(rates) == 0:
         raise RuntimeError(f"No se pudieron obtener velas de {symbol} en {timeframe_str}. "

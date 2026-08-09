@@ -658,27 +658,70 @@ tbody tr:hover td{background:var(--card2)}
 
 <!-- ─── CUENTA ────────────────────────────────────────────────────────────── -->
 <div class="panel" id="p-acct">
-  <div class="grid2">
-    <div class="card">
-      <h3>🔌 Cuenta MetaTrader 5</h3>
-      <div id="acct-connected" style="display:none">
-        <div class="conn-box"><div class="conn-name" id="a-name"></div><div class="conn-detail" id="a-detail"></div></div>
-        <button class="btn btn-red btn-full" onclick="doDisconnect()">Desconectar cuenta</button>
+
+  <!-- Cuenta activa -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>🔌 Cuenta activa</h3>
+    <div id="acct-connected" style="display:none">
+      <div class="conn-box" style="margin-bottom:12px">
+        <div class="conn-name" id="a-name"></div>
+        <div class="conn-detail" id="a-detail"></div>
       </div>
-      <div id="acct-form">
-        <div class="field"><label>Login</label><input type="number" id="a-login" placeholder="7916999"/></div>
-        <div class="field"><label>Contraseña</label><input type="password" id="a-pass" placeholder="••••••"/></div>
-        <div class="field" style="margin-bottom:16px"><label>Servidor</label><input type="text" id="a-srv" placeholder="BridgeMarkets-MT5"/></div>
-        <button class="btn btn-accent btn-full btn-lg" onclick="doConnect()">Conectar</button>
-      </div>
+      <button class="btn btn-red" onclick="doDisconnect()">Desconectar</button>
     </div>
-    <div class="card">
-      <h3>🔔 Notificaciones push</h3>
-      <div class="sub">Alertas en tiempo real: señales, trades ejecutados, límites de riesgo activados, bot iniciado/detenido.</div>
-      <button class="btn btn-full btn-lg" id="push-btn" onclick="togglePush()" style="background:var(--card2);border:1.5px solid var(--border2);color:var(--txt)">Activar notificaciones</button>
-      <div style="font-size:12px;color:var(--txt3);margin-top:10px" id="push-status">Estado: desactivado</div>
+    <div id="acct-no-conn" style="color:var(--txt2);font-size:13px;">Sin cuenta conectada. Selecciona una abajo o agrega una nueva.</div>
+  </div>
+
+  <!-- Lista de cuentas guardadas -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div class="sec" style="margin:0">Mis cuentas MT5</div>
+    <button class="btn btn-sm btn-accent" onclick="showAddAccount()">+ Agregar</button>
+  </div>
+  <div id="accounts-list">
+    <div class="empty"><div class="ei">🏦</div><div class="et">Sin cuentas guardadas</div></div>
+  </div>
+
+  <!-- Formulario agregar cuenta (oculto por defecto) -->
+  <div id="add-account-form" class="card" style="display:none;margin-top:16px">
+    <h3>➕ Agregar cuenta MT5</h3>
+    <div class="field">
+      <label>Etiqueta (nombre amigable)</label>
+      <input type="text" id="aa-label" placeholder="Ej: Bridge Real, Deriv Demo"/>
+    </div>
+    <div class="field">
+      <label>Login (número de cuenta)</label>
+      <input type="number" id="aa-login" placeholder="7916999"/>
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="aa-pass" placeholder="••••••"/>
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <label>Servidor</label>
+      <input type="text" id="aa-server" placeholder="BridgeMarkets-MT5"/>
+      <div id="server-suggestions" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="hideAddAccount()">Cancelar</button>
+      <button class="btn btn-accent" style="flex:1" onclick="doAddAccount()">Guardar y conectar</button>
     </div>
   </div>
+
+  <!-- Notificaciones push -->
+  <div class="card" style="margin-top:16px">
+    <h3>🔔 Notificaciones push</h3>
+    <div class="sub">Alertas en tiempo real: señales, trades ejecutados, límites de riesgo.</div>
+    <button class="btn btn-full btn-lg" id="push-btn" onclick="togglePush()" style="background:var(--card2);border:1.5px solid var(--border2);color:var(--txt);margin-top:10px">Activar notificaciones</button>
+    <div style="font-size:12px;color:var(--txt3);margin-top:8px" id="push-status">Estado: desactivado</div>
+  </div>
+
+  <!-- Danger zone -->
+  <div class="card" style="margin-top:16px;border:1.5px solid var(--redBg)">
+    <h3 style="color:var(--red)">⚠️ Zona peligrosa</h3>
+    <div class="sub" style="margin-bottom:12px">Elimina todo el historial de trades y señales de la DB. Las cuentas guardadas se conservan.</div>
+    <button class="btn btn-red" onclick="doResetDB()">🗑 Limpiar historial completo</button>
+  </div>
+
 </div>
 
 </main>
@@ -702,6 +745,7 @@ function toggleTheme(){
 
 /* ─── Toast ─────────────────────────────────────────────────────────────── */
 let _tt;
+let _currentLogin = null;
 function toast(msg,cls='b'){
   const el=document.getElementById('toast');
   el.textContent=msg; el.className='show '+cls;
@@ -753,7 +797,7 @@ async function wizConnect(){
     const r=await fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({login,password:pass,server:srv})});
     const d=await r.json();
-    if(d.ok){toast('✅ Conectado a MT5','g'); wizStep(2);}
+    if(d.ok){_currentLogin=d.login||null; _activeAccountId=d.account_id||null; toast('✅ Conectado a MT5','g'); wizStep(2);}
     else toast('❌ '+(d.error||'Error'),'r');
   }catch(e){toast('Error de red','r');}
 }
@@ -965,7 +1009,8 @@ async function loadSignalHistory(){
   const el = document.getElementById('sig-history');
   try{
     const r = await fetch('/api/signals/history?limit=30');
-    const sigs = await r.json();
+    const all = await r.json();
+    const sigs = all.filter(s => _currentLogin == null || s.mt5_login == _currentLogin);
     if(!sigs.length){
       el.innerHTML='<div class="empty"><div class="ei">📋</div><div class="et">Sin señales aún</div></div>';
       return;
@@ -995,9 +1040,9 @@ async function loadTradesHistory(){
   const el = document.getElementById('rep-trades');
   if(!el) return;
   try{
-    const r = await fetch('/api/performance?days=30');
+    const r = await fetch('/api/report?days=30');
     const d = await r.json();
-    const trades = d.trades || [];
+    const trades = (d.trades || []).filter(t => _currentLogin == null || t.mt5_login == _currentLogin);
     if(!trades.length){
       el.innerHTML='<div class="empty"><div class="ei">📋</div><div class="et">Sin trades cerrados aún</div></div>';
       return;
@@ -1172,35 +1217,145 @@ async function _renderRep(fetchPromise){
   }catch(e){console.error(e);}
 }
 
-/* ─── Account ────────────────────────────────────────────────────────────── */
+/* ─── Account manager ────────────────────────────────────────────────────── */
+let _activeAccountId = null;
+
 async function loadConn(){
   try{
     const r=await fetch('/api/connection'); const d=await r.json();
-    document.getElementById('acct-connected').style.display=d.connected?'block':'none';
-    document.getElementById('acct-form').style.display=d.connected?'none':'block';
+    const connEl = document.getElementById('acct-connected');
+    const noConn = document.getElementById('acct-no-conn');
     if(d.connected){
+      _currentLogin = d.login || null;
+      _activeAccountId = d.account_id || null;
+      connEl.style.display='block';
+      if(noConn) noConn.style.display='none';
       document.getElementById('a-name').textContent=d.name||'Cuenta #'+d.login;
       document.getElementById('a-detail').textContent=`Login: ${d.login} | ${d.server} | ${d.currency} ${(d.balance||0).toFixed(2)}`;
+    } else {
+      _currentLogin = null;
+      _activeAccountId = null;
+      connEl.style.display='none';
+      if(noConn) noConn.style.display='block';
     }
+    loadAccountsList();
   }catch(e){}
 }
-async function doConnect(){
-  const login=parseInt(document.getElementById('a-login').value);
-  const pass=document.getElementById('a-pass').value;
-  const srv=document.getElementById('a-srv').value.trim();
-  if(!login||!pass||!srv){toast('Completa todos los campos','r');return;}
+
+async function loadAccountsList(){
+  const el = document.getElementById('accounts-list');
+  if(!el) return;
+  try{
+    const accounts = await fetch('/api/accounts').then(r=>r.json());
+    if(!accounts.length){
+      el.innerHTML='<div class="empty"><div class="ei">🏦</div><div class="et">Sin cuentas guardadas</div><div class="es">Usa "+ Agregar" para guardar tu primera cuenta MT5</div></div>';
+      return;
+    }
+    el.innerHTML = accounts.map(a=>{
+      const isActive = a.active;
+      const brokerIcon = a.broker==='bridge'?'🌉':a.broker==='deriv'?'🔷':'🏦';
+      const bal = a.balance>0?`${a.currency||'USD'} ${(+a.balance).toFixed(2)}`:'—';
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1.5px solid ${isActive?'var(--accent)':'var(--border)'};background:${isActive?'var(--accentBg)':'var(--card2)'};margin-bottom:8px;">
+        <div style="font-size:22px">${brokerIcon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:13px;${isActive?'color:var(--accent)':''}">${a.label}${isActive?' ✓':''}</div>
+          <div style="font-size:11px;color:var(--txt2)">Login: ${a.login} · ${a.server}</div>
+          <div style="font-size:11px;color:var(--txt3)">Balance: ${bal}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          ${!isActive?`<button class="btn btn-sm btn-accent" onclick="connectAccount(${a.id})">Conectar</button>`:''}
+          <button class="btn btn-sm" style="background:var(--redBg);color:var(--red)" onclick="deleteAccount(${a.id},'${a.label}')">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML='<div class="empty"><div class="ei">⚠️</div><div class="et">Error cargando cuentas</div></div>';
+  }
+}
+
+async function connectAccount(accountId){
   toast('Conectando...','b');
   try{
-    const r=await fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({login,password:pass,server:srv})});
-    const d=await r.json();
-    if(d.ok){toast('✅ Conectado a MT5','g');loadConn();loadStats();}
-    else toast('❌ '+(d.error||'Error'),'r');
+    const d=await fetch(`/api/accounts/${accountId}/connect`,{method:'POST'}).then(r=>r.json());
+    if(d.ok){
+      _currentLogin=d.login||null;
+      _activeAccountId=d.account_id||null;
+      toast(`✅ Conectado — ${d.name||'Cuenta #'+d.login}`,'g');
+      loadConn(); loadStats();
+      clearTradeHistory();
+    } else toast('❌ '+(d.error||'Error'),'r');
   }catch(e){toast('Error de red','r');}
 }
+
+async function deleteAccount(accountId, label){
+  if(!confirm(`¿Eliminar cuenta "${label}"? Se borrarán todos sus trades y señales.`)) return;
+  await fetch(`/api/accounts/${accountId}`,{method:'DELETE'});
+  toast('Cuenta eliminada','b');
+  loadConn();
+  clearTradeHistory();
+}
+
 async function doDisconnect(){
   await fetch('/api/disconnect',{method:'POST'});
+  _currentLogin=null; _activeAccountId=null;
+  clearTradeHistory();
   toast('Desconectado','b'); loadConn();
+}
+
+function clearTradeHistory(){
+  const rt=document.getElementById('rep-trades');
+  if(rt) rt.innerHTML='<div class="empty"><div class="ei">📋</div><div class="et">Sin trades cerrados aún</div></div>';
+  const sh=document.getElementById('sig-history');
+  if(sh) sh.innerHTML='<div class="empty"><div class="ei">📋</div><div class="et">Sin señales aún</div></div>';
+}
+
+function showAddAccount(){
+  document.getElementById('add-account-form').style.display='block';
+  loadServerSuggestions();
+}
+function hideAddAccount(){
+  document.getElementById('add-account-form').style.display='none';
+}
+
+async function loadServerSuggestions(){
+  try{
+    const servers=await fetch('/api/accounts/servers').then(r=>r.json());
+    const el=document.getElementById('server-suggestions');
+    el.innerHTML=servers.map(s=>`<button class="btn btn-sm" style="font-size:11px;background:var(--card2);border:1px solid var(--border2)" onclick="document.getElementById('aa-server').value='${s.name}'">${s.label}</button>`).join('');
+  }catch(e){}
+}
+
+async function doAddAccount(){
+  const label=document.getElementById('aa-label').value.trim();
+  const login=parseInt(document.getElementById('aa-login').value);
+  const pass=document.getElementById('aa-pass').value;
+  const server=document.getElementById('aa-server').value.trim();
+  if(!login||!pass||!server){toast('Completa login, contraseña y servidor','r');return;}
+  toast('Conectando...','b');
+  try{
+    const d=await fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({login,password:pass,server,label:label||`Cuenta ${login}`})}).then(r=>r.json());
+    if(d.ok){
+      _currentLogin=d.login||null;
+      _activeAccountId=d.account_id||null;
+      toast(`✅ Cuenta guardada y conectada`,'g');
+      hideAddAccount();
+      loadConn(); loadStats();
+      clearTradeHistory();
+    } else toast('❌ '+(d.error||'Error'),'r');
+  }catch(e){toast('Error de red','r');}
+}
+
+async function doResetDB(){
+  if(!confirm('¿Limpiar TODO el historial de trades y señales? Esta acción no se puede deshacer.')) return;
+  await fetch('/api/db/reset',{method:'POST'});
+  clearTradeHistory();
+  toast('Historial limpiado','b');
+}
+
+// Mantener compatibilidad con wizard
+async function doConnect(){
+  return doAddAccount();
 }
 
 /* ─── Push ───────────────────────────────────────────────────────────────── */

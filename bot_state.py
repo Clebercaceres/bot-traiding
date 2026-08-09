@@ -8,13 +8,11 @@ import config
 _lock = threading.Lock()
 
 _state = {
-    # Modos activos (control manual desde dashboard)
-    "analysis_enabled": False,   # True = estudiando M15
-    "trading_enabled": False,    # True = buscando señales M1
-    # Ejecución: True = bot ejecuta solo, False = espera confirmación del usuario
+    "analysis_enabled": False,
+    "trading_enabled": False,
     "execution_auto": False,
-    # Siempre en modo manual: el usuario decide cuándo analizar y operar
     "manual_mode": True,
+    "active_account_id": None,  # id de la cuenta activa en DB
 }
 
 
@@ -74,3 +72,13 @@ def is_analysis_active() -> bool:
 
 def is_trading_active() -> bool:
     return get()["trading_enabled"]
+
+
+def set_active_account(account_id: int):
+    with _lock:
+        _state["active_account_id"] = account_id
+
+
+def get_active_account_id() -> int | None:
+    with _lock:
+        return _state.get("active_account_id")

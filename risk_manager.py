@@ -8,6 +8,7 @@ import config
 import db
 import mt5_connector
 import push_service
+import bot_state
 
 
 def calculate_lot_size(symbol: str, entry: float, sl: float) -> float:
@@ -65,7 +66,8 @@ def calculate_lot_size(symbol: str, entry: float, sl: float) -> float:
 
 def can_trade_today() -> bool:
     """Retorna True si la sesión sigue activa (no superó límites del día)."""
-    state = db.get_today_state()
+    acct_id = bot_state.get_active_account_id()
+    state = db.get_today_state(acct_id)
     if state["stopped"]:
         print(f"[RISK] Sesión detenida: {state['stopped_reason']}")
         return False
@@ -73,11 +75,8 @@ def can_trade_today() -> bool:
 
 
 def check_and_update_after_trade(profit: float, balance: float):
-    """
-    Llamar después de que se cierre cada trade.
-    Actualiza pérdidas consecutivas y PnL diario; detiene la sesión si aplica.
-    """
-    state = db.get_today_state()
+    acct_id = bot_state.get_active_account_id()
+    state = db.get_today_state(acct_id)
     consecutive = state["consecutive_losses"]
     pnl_pct = state["pnl_pct"]
 
@@ -117,5 +116,5 @@ def check_and_update_after_trade(profit: float, balance: float):
         print(f"[RISK] ⛔ SESIÓN DETENIDA: {reason}")
         push_service.notify_session_stopped(reason)
 
-    db.update_today_state(**updates)
+    db.update_today_state(account_id=acct_id, **updates)
     print(f"[RISK] Trade cerrado | profit={profit:.2f} | PnL día={new_pnl_pct:.2f}% | pérd.consec={new_consecutive}")

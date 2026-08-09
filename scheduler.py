@@ -56,7 +56,11 @@ def _maybe_refresh_m15():
         try:
             _context_cache[sym] = strategy.analyze_m15_context(sym)
         except Exception as e:
-            print(f"[SCHEDULER] Error M15 {sym}: {e}")
+            msg = str(e)
+            if "Call failed" in msg:
+                print(f"[SCHEDULER] MT5 no listo aún para {sym}, reintentando en próximo ciclo.")
+            else:
+                print(f"[SCHEDULER] Error M15 {sym}: {e}")
     _last_m15_check = now
 
 
@@ -126,6 +130,7 @@ def _try_signal():
         lot_size=best_lot,
         rsi_value=best_signal["rsi"],
         score=best_score,
+        account_id=bot_state.get_active_account_id(),
     )
     push_service.notify_signal(
         best_signal["symbol"], best_signal["direction"],
@@ -230,6 +235,7 @@ def _monitor_positions():
                 open_price=meta["open_price"],
                 close_price=close_price,
                 profit=profit,
+                account_id=bot_state.get_active_account_id(),
             )
 
             balance = mt5_connector.get_account_balance()
@@ -356,14 +362,18 @@ def _modify_sl(pos, new_sl: float, tp: float):
 
 
 def _mt5_ok() -> bool:
-    """True si hay cuenta MT5 activa."""
-    import MetaTrader5 as mt5
-    return mt5.account_info() is not None
+    """True si hay cuenta MT5 activa y terminal lista para llamadas."""
+    info = mt5.account_info()
+    if info is None:
+        return False
+    # Verificar que el terminal responde (evita 'Call failed' en inicio)
+    return mt5.terminal_info() is not None
 
 
 def run():
     """Loop infinito del scheduler. Corre en un hilo secundario."""
     print("[SCHEDULER] Iniciando loop...")
+    time.sleep(5)  # espera que MT5 termine de inicializar feeds de datos
     while True:
         try:
             if not _mt5_ok():

@@ -11,6 +11,7 @@ import uvicorn
 import config
 import db
 import mt5_connector
+import bot_state
 import scheduler
 import push_service
 
@@ -32,7 +33,22 @@ def main():
 
     # 2. Conexión MT5 (opcional al arranque — se puede conectar desde el dashboard)
     try:
-        mt5_connector.connect()
+        info = mt5_connector.connect()
+        # Si hay credenciales en config, detectar broker y activar símbolos
+        if info and config.MT5_LOGIN:
+            broker = mt5_connector.detect_broker()
+            # Buscar o crear la cuenta en DB
+            account_id = db.save_account(
+                login=info.login,
+                password=config.MT5_PASSWORD,
+                server=info.server,
+                label=f"Cuenta {info.login}",
+                broker=broker,
+                currency=info.currency,
+            )
+            db.update_account_balance(account_id, info.balance, info.currency)
+            db.activate_symbols_for_broker(broker)
+            bot_state.set_active_account(account_id)
     except RuntimeError as e:
         print(f"[MAIN] ⚠️  MT5 no conectado al arranque: {e}")
         print("[MAIN]    → Conéctate desde el dashboard (tab Cuenta) para operar.")

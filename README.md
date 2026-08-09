@@ -1,55 +1,54 @@
-# TradeBot — Bot de señales MT5 (Bridge Markets Demo)
+# TradeBot — Bot de señales MT5
 
-Bot de trading para sintéticos **BullX500 / BearX500** en cuenta DEMO de Bridge Markets.
-Opera en modo `confirm`: genera señales y espera tu aprobación en el dashboard antes de ejecutar.
+Bot de trading algorítmico para índices sintéticos. Soporta **Bridge Markets** (Bear/Bull) y **Deriv** (Volatility). Detecta el broker automáticamente y activa los símbolos correctos.
+
+Modos de ejecución: **Confirmar** (tú decides cada trade) o **Automático** (el bot ejecuta solo).
 
 ---
 
 ## Requisitos previos
 
 - Windows 10/11
-- MetaTrader 5 de escritorio instalado y abierto
-- Cuenta DEMO de Bridge Markets logueada en el terminal MT5
+- MetaTrader 5 de escritorio instalado
+- Cuenta en Bridge Markets **o** Deriv (demo o real)
 - Python 3.10 o superior
 
 ---
 
-## Instalación paso a paso
+## Instalación
 
-### 1. Verificar Python
+### 1. Clonar el repositorio
 
-Abre PowerShell o CMD y ejecuta:
+```
+git clone <url-del-repo>
+cd tradebot/tradebot
+```
+
+### 2. Verificar Python
+
 ```
 python --version
 ```
-Si no está instalado, descárgalo en https://python.org (marcar "Add Python to PATH" durante la instalación).
 
-### 2. Instalar dependencias
+Si no está instalado: https://python.org → marcar **"Add Python to PATH"** al instalar.
 
-Dentro de la carpeta `tradebot/`:
+### 3. Instalar dependencias
+
 ```
 pip install -r requirements.txt
 ```
 
-### 3. Configurar credenciales MT5
+### 4. (Opcional) Configurar auto-login en `config.py`
 
-Abre `config.py` y completa:
+Si quieres que el bot se conecte solo al arrancar, abre `config.py` y completa:
+
 ```python
-MT5_LOGIN = 123456        # tu número de cuenta demo (entero)
-MT5_PASSWORD = "tu_clave"
-MT5_SERVER = "BridgeMarkets-Demo"  # nombre exacto del servidor en MT5
+MT5_LOGIN    = 123456           # número de cuenta (entero)
+MT5_PASSWORD = "tu_contraseña"
+MT5_SERVER   = "BridgeMarkets-MT5"  # o "Deriv-Demo", "Deriv-Server"
 ```
 
-> **Alternativa:** si el terminal MT5 ya está abierto y logueado manualmente,
-> puedes dejar `MT5_LOGIN = 0` y el bot usará la sesión activa sin hacer login.
-
-### 4. Verificar los símbolos en MT5
-
-En el terminal MT5:
-- Ve a **Ver → Observación del mercado** (Ctrl+M)
-- Busca `BullX500` y `BearX500`
-- Si no aparecen, haz clic derecho → **Mostrar todos** y búscalos
-- Asegúrate de que tengan precio (tick activo)
+> Si lo dejas en cero (`MT5_LOGIN = 0`), el bot arranca sin cuenta y la conectas desde el dashboard.
 
 ### 5. Correr el bot
 
@@ -59,97 +58,158 @@ python main.py
 
 ### 6. Abrir el dashboard
 
-En tu navegador:
 ```
 http://127.0.0.1:8420
 ```
 
-Desde tu teléfono en la misma red WiFi:
+Desde el celular en la misma red WiFi:
 ```
 http://<IP-de-tu-PC>:8420
 ```
-(Busca tu IP local con `ipconfig` en CMD, busca "Dirección IPv4".)
+(Encuentra tu IP con `ipconfig` en CMD → "Dirección IPv4".)
 
 ---
 
-## Horarios de operación
+## Primer uso — paso a paso en el dashboard
 
-| Hora | Qué hace el bot |
-|------|----------------|
-| 3:00 pm – 8:00 pm | Solo análisis: lee M15 cada 15 min y registra el sesgo |
-| 8:00 pm – 12:00 am | Busca señales en M1 cada minuto, las muestra en el dashboard |
-| Fuera de horario | Duerme, no hace nada |
+### Paso 1: Conectar tu cuenta MT5
 
----
+1. Abre el dashboard → tab **Cuenta**
+2. Haz clic en **"+ Agregar"**
+3. Llena:
+   - **Etiqueta:** nombre amigable (ej: "Deriv Demo", "Bridge Real")
+   - **Login:** número de cuenta MT5
+   - **Contraseña:** clave de la cuenta
+   - **Servidor:** usa los botones de sugerencia (Bridge Markets o Deriv) o escríbelo manualmente
+4. Haz clic en **"Guardar y conectar"**
 
-## Cómo usar el dashboard
+El bot detecta automáticamente si es Bridge Markets o Deriv y activa los símbolos correctos:
+- **Bridge Markets** → BullX500, BearX500, BullX777, BearX777, BullX1000, BearX1000
+- **Deriv** → Volatility 75 Index, Volatility 100 Index
 
-1. Las señales aparecen en la sección **"Señales pendientes"**
-2. Cada señal muestra: símbolo, dirección (BUY/SELL), precio de entrada, SL y TP
-3. Haz clic en **Confirmar** para que el bot ejecute la orden en MT5
-4. Haz clic en **Rechazar** para descartarla
-5. El dashboard se actualiza solo cada 10 segundos
+### Paso 2: Activar análisis
 
----
+Tab **Control** → botón **"▶ Iniciar"** en "Análisis M15".
 
-## Protecciones de riesgo activas
+El bot empieza a leer el mercado cada 15 minutos y calcula el sesgo de tendencia.
 
-- **Riesgo por operación:** 4% del balance
-- **Máximo trades por sesión:** 5
-- **Pérdidas consecutivas:** el bot se detiene automáticamente con 2 pérdidas seguidas
-- **Límite de pérdida diaria:** si el PnL del día cae a -15%, el bot se apaga solo
+### Paso 3: Activar trading
 
----
+Tab **Control** → botón **"▶ Iniciar"** en "Trading M1".
 
-## Mantener el bot corriendo entre 3pm y 12am
+Ahora el bot busca señales cada minuto.
 
-Para evitar que el computador se suspenda durante la sesión:
+### Paso 4: Elegir modo de ejecución
 
-**Windows 11:**
-1. Inicio → Configuración → Sistema → Alimentación y suspensión
-2. En **"Suspensión"**, cambia a **"Nunca"** mientras el bot esté activo
-3. Vuelve a tu configuración normal después de las 12am
+En la misma tab Control:
 
-**Alternativa (comando):** abre PowerShell como administrador y ejecuta:
-```powershell
-powercfg -change -standby-timeout-ac 0
-```
-Para restaurar después:
-```powershell
-powercfg -change -standby-timeout-ac 30
-```
+| Modo | Qué hace |
+|------|----------|
+| 🎮 **Confirmar** | El bot genera la señal, tú haces clic para ejecutarla |
+| 🤖 **Automático** | El bot ejecuta la orden directamente sin esperar |
+
+### Paso 5: Ver señales y trades
+
+- **Tab Dashboard** → señales pendientes de confirmación + historial de señales
+- **Tab Reporte** → curva de PnL, win rate, historial de trades por cuenta
 
 ---
 
-## Reporte de rendimiento
+## Gestión de múltiples cuentas
 
-Ve a `/api/report?days=7` o usa los botones del dashboard.
+Tab **Cuenta** → lista todas tus cuentas guardadas. Un clic en **"Conectar"** cambia de cuenta: los datos del dashboard (trades, señales, estadísticas del día) son 100% independientes por cuenta.
 
-**Checkpoints del plan de prueba:**
-- **Día 3–4:** revisar reporte de 3.5 días → decidir ajustes
-- **Día 7:** reporte completo → evaluar si continuar o modificar estrategia
+Para agregar otra cuenta: botón **"+ Agregar"** y repite el proceso.
 
 ---
 
-## Archivos del proyecto
+## Protecciones de riesgo
+
+| Parámetro | Valor | Qué hace |
+|-----------|-------|----------|
+| Riesgo por trade | 2% del balance | Ajusta el lote automáticamente |
+| Máx. trades/sesión | 15 | Para después de ese número |
+| Pérdidas consecutivas | 4 | Se detiene si pierde 4 seguidas |
+| Límite pérdida diaria | 10% | Se apaga si el día pierde >10% |
+| Score mínimo señal | 65/100 | Descarta señales de baja calidad |
+
+Todos estos valores se ajustan en `config.py`.
+
+---
+
+## Breakeven y trailing stop
+
+Una vez en trade, el bot gestiona automáticamente:
+
+- **Breakeven** al 50% del SL: mueve el SL a precio de entrada → pérdida = 0
+- **Trailing nivel 1** al 120% del SL: arrastra el SL
+- **Trailing nivel 2** al 200% del SL: arrastra más cerca
+- **Cierre anticipado** al 80% del TP, o al 60% del TP si hay vela de reversión
+
+---
+
+## Estructura del proyecto
 
 ```
 tradebot/
-  config.py          ← toda la configuración (tocar solo aquí)
-  db.py              ← base de datos SQLite (no tocar)
-  mt5_connector.py   ← conexión a MT5 (no tocar)
-  strategy.py        ← lógica EMA/RSI/ATR
-  risk_manager.py    ← gestión de riesgo y límites diarios
-  scheduler.py       ← loop de análisis y ejecución
-  dashboard.py       ← API FastAPI del dashboard
-  main.py            ← punto de entrada
+  config.py          ← TODA la configuración (solo toca este archivo)
+  main.py            ← punto de entrada: py main.py
+  bot_state.py       ← estado global del bot (análisis, trading, cuenta activa)
+  scheduler.py       ← loop principal: M15 cada 15min, M1 cada 1min
+  strategy.py        ← lógica EMA50/200 + RSI + breakout 3 velas + ATR
+  risk_manager.py    ← cálculo de lotes, límites diarios, pérdidas consecutivas
+  mt5_connector.py   ← todo lo que habla con MT5
+  db.py              ← SQLite: cuentas, señales, trades, estado diario
+  dashboard.py       ← API FastAPI (endpoints del dashboard)
+  push_service.py    ← notificaciones push al celular
   requirements.txt   ← dependencias Python
-  tradebot.db        ← base de datos (se crea sola al correr)
+  tradebot.db        ← base de datos LOCAL (no se sube al repo, se crea sola)
   templates/
-    dashboard.html   ← interfaz web
+    dashboard.html   ← interfaz web completa
+    sw.js            ← service worker para notificaciones push
 ```
+
+> `tradebot.db` está en `.gitignore` — cada usuario tiene su propia base de datos con sus trades y cuentas. Al clonar el repo y correr `py main.py` por primera vez, se crea automáticamente limpia.
 
 ---
 
-> ⚠️ **Solo cuenta DEMO.** Este bot es exclusivamente para pruebas en paper trading.
-> No se ejecuta en cuentas reales bajo ninguna circunstancia durante esta fase.
+## Evitar que la PC se duerma
+
+El bot necesita que el computador esté activo. En PowerShell (administrador):
+
+```powershell
+# Desactivar suspensión mientras operas
+powercfg -change -standby-timeout-ac 0
+
+# Restaurar después
+powercfg -change -standby-timeout-ac 30
+```
+
+O en Windows: Configuración → Sistema → Alimentación y suspensión → **Nunca**.
+
+---
+
+## Brokers soportados
+
+| Broker | Símbolos | Tipo de cuenta |
+|--------|----------|----------------|
+| Bridge Markets | BullX500, BearX500, BullX777, BearX777, BullX1000, BearX1000 | Demo / Real |
+| Deriv | Volatility 75 Index, Volatility 100 Index | Demo / Real |
+
+> El bot detecta el broker automáticamente al conectar y activa los símbolos correctos. No necesitas configurar nada manualmente.
+
+---
+
+## Solución de problemas comunes
+
+**"Terminal: Call failed" al arrancar**
+→ Normal los primeros segundos. MT5 tarda en inicializar los feeds. Desaparece solo.
+
+**"Login fallido"**
+→ Verifica que el servidor sea exactamente el que muestra MT5 (sensible a mayúsculas).
+
+**Señales no aparecen**
+→ Asegúrate de activar primero Análisis, luego Trading. El primer ciclo M15 tarda hasta 15 min.
+
+**Balance no actualiza**
+→ Reconecta la cuenta desde tab Cuenta.
