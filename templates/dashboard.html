@@ -1047,31 +1047,54 @@ async function loadTradesHistory(){
       el.innerHTML='<div class="empty"><div class="ei">📋</div><div class="et">Sin trades cerrados aún</div></div>';
       return;
     }
-    el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
-      <thead><tr style="background:var(--card2);text-align:left;">
-        <th style="padding:8px 10px;">Símbolo</th>
-        <th style="padding:8px 10px;">Dir</th>
-        <th style="padding:8px 10px;">Apertura</th>
-        <th style="padding:8px 10px;">Cierre</th>
-        <th style="padding:8px 10px;">Profit</th>
-        <th style="padding:8px 10px;">Resultado</th>
-      </tr></thead>
-      <tbody>${trades.map(t=>{
-        const open = t.open_time ? new Date(t.open_time).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—';
-        const close = t.close_time ? new Date(t.close_time).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—';
-        const profit = (t.profit||0).toFixed(2);
-        const win = t.result === 'win';
-        const dir = t.direction === 'buy' ? '▲ BUY' : '▼ SELL';
-        return `<tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:8px 10px;font-weight:600;">${t.symbol||'—'}</td>
-          <td style="padding:8px 10px;"><span class="chip ${t.direction==='buy'?'buy':'sell'}" style="font-size:11px;">${dir}</span></td>
-          <td style="padding:8px 10px;color:var(--txt2);">${open}</td>
-          <td style="padding:8px 10px;color:var(--txt2);">${close}</td>
-          <td style="padding:8px 10px;font-weight:700;color:${win?'#22c55e':'#ef4444'};">${win?'+':''}$${profit}</td>
-          <td style="padding:8px 10px;"><span class="chip ${win?'exec':'rej'}" style="font-size:11px;">${win?'✅ WIN':'❌ LOSS'}</span></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>`;
+    const rows = trades.map(t=>{
+      const open = t.open_time ? new Date(t.open_time).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—';
+      const close = t.close_time ? new Date(t.close_time).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—';
+      const profit = (t.profit||0).toFixed(2);
+      const win = t.result === 'win';
+      const dir = t.direction === 'buy' ? '▲ BUY' : '▼ SELL';
+      const dirCls = t.direction==='buy'?'buy':'sell';
+      const resCls = win?'exec':'rej';
+      const profitColor = win?'#22c55e':'#ef4444';
+      return {open,close,profit,win,dir,dirCls,resCls,profitColor,t};
+    });
+    const tblHtml = rows.map(({open,close,profit,win,dir,dirCls,resCls,profitColor,t})=>`
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 10px;font-weight:600;">${t.symbol||'—'}</td>
+        <td style="padding:8px 10px;"><span class="chip ${dirCls}" style="font-size:11px;">${dir}</span></td>
+        <td style="padding:8px 10px;color:var(--txt2);">${open}</td>
+        <td style="padding:8px 10px;color:var(--txt2);">${close}</td>
+        <td style="padding:8px 10px;font-weight:700;color:${profitColor};">${win?'+':''}$${profit}</td>
+        <td style="padding:8px 10px;"><span class="chip ${resCls}" style="font-size:11px;">${win?'✅ WIN':'❌ LOSS'}</span></td>
+      </tr>`).join('');
+    const cardsHtml = rows.map(({open,close,profit,win,dir,dirCls,resCls,profitColor,t})=>`
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-weight:700;font-size:13px;">${t.symbol||'—'}</span>
+          <span class="chip ${resCls}" style="font-size:11px;">${win?'✅ WIN':'❌ LOSS'}</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+          <span class="chip ${dirCls}" style="font-size:11px;">${dir}</span>
+          <span style="font-weight:700;font-size:14px;color:${profitColor};">${win?'+':''}$${profit}</span>
+        </div>
+        <div style="font-size:11px;color:var(--txt2);">Apertura: ${open}</div>
+        <div style="font-size:11px;color:var(--txt2);">Cierre: ${close}</div>
+      </div>`).join('');
+    el.innerHTML = `
+      <div class="tbl-wrap">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="background:var(--card2);text-align:left;">
+            <th style="padding:8px 10px;">Símbolo</th>
+            <th style="padding:8px 10px;">Dir</th>
+            <th style="padding:8px 10px;">Apertura</th>
+            <th style="padding:8px 10px;">Cierre</th>
+            <th style="padding:8px 10px;">Profit</th>
+            <th style="padding:8px 10px;">Resultado</th>
+          </tr></thead>
+          <tbody>${tblHtml}</tbody>
+        </table>
+      </div>
+      <div class="trade-cards">${cardsHtml}</div>`;
   }catch(e){
     el.innerHTML='<div class="empty"><div class="ei">⚠️</div><div class="et">Error cargando trades</div></div>';
   }
