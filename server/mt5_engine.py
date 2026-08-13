@@ -165,7 +165,7 @@ class MT5Engine:
 
     async def _refresh_m15_if_needed(self):
         now = datetime.utcnow()
-        if self._last_m15 and (now - self._last_m15).seconds < 900:
+        if self._last_m15 and (now - self._last_m15).total_seconds() < 900:
             return
         in_sess = _in_session()
         log.info(f"[BRIDGE] {'Sesión activa' if in_sess else '🌙 Fuera de sesión — score ≥78 para forex'}")

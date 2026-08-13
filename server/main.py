@@ -7,8 +7,7 @@ import json
 from datetime import datetime, date
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Response, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from database import init_db, get_db

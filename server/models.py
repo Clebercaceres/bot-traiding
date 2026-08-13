@@ -26,6 +26,7 @@ class Account(Base):
     label          = Column(String, nullable=False)
     login          = Column(Integer, nullable=False)
     password            = Column(String, nullable=True)  # encriptado con Fernet
+    api_token           = Column(String, nullable=True)  # Deriv API token
     metaapi_account_id  = Column(String, nullable=True)  # ID en MetaApi (Deriv + Bridge cloud)
     server              = Column(String, nullable=False)
     broker         = Column(String, default="unknown")
