@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TradeBot — Dashboard</title>
+<style>
+:root{
+  --accent:#5046e4;--accent2:#7c6ff7;
+  --bg:#0f1117;--bg2:#161b27;--card:#1c2133;--card2:#232a3e;
+  --border:#2a3050;--border2:#374060;
+  --txt:#e8eaf6;--txt2:#8893b4;--txt3:#5b6480;
+  --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
+  --r:10px;--r2:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+/* ── Layout ── */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100%;z-index:100}
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* ── Sidebar ── */
+.sb-brand{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.sb-brand-icon{font-size:26px;margin-bottom:6px}
+.sb-brand-name{font-size:15px;font-weight:800;color:var(--txt)}
+.sb-brand-sub{font-size:11px;color:var(--txt3)}
+.sb-nav{flex:1;padding:12px 8px;overflow-y:auto}
+.sb-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);padding:12px 10px 6px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--txt2);font-size:13.5px;font-weight:500;transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.sb-item:hover{background:var(--card);color:var(--txt)}
+.sb-item.active{background:var(--accent);color:#fff}
+.sb-item .icon{font-size:16px;width:20px;text-align:center}
+.sb-footer{padding:12px 8px;border-top:1px solid var(--border)}
+.user-chip{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--card)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-email{font-size:11px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logout-btn{width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--txt2);font-size:12.5px;cursor:pointer;transition:all .15s}
+.logout-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* ── Topbar ── */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:17px;font-weight:700;color:var(--txt)}
+.agent-status{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--txt2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--txt3)}
+.dot.online{background:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.2)}
+.dot.offline{background:var(--red)}
+
+/* ── Content ── */
+.content{flex:1;padding:24px;overflow-y:auto}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* ── Cards ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--card);border-radius:var(--r2);padding:18px 20px;border:1px solid var(--border)}
+.stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--txt3);margin-bottom:8px}
+.stat-value{font-size:26px;font-weight:800;color:var(--txt)}
+.stat-sub{font-size:12px;color:var(--txt2);margin-top:4px}
+.stat-value.green{color:var(--green)}
+.stat-value.red{color:var(--red)}
+
+/* ── Section headers ── */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:15px;font-weight:700;color:var(--txt)}
+.badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--accent);color:#fff}
+.badge.green{background:rgba(34,197,94,.15);color:var(--green)}
+.badge.red{background:rgba(239,68,68,.15);color:var(--red)}
+.badge.yellow{background:rgba(245,158,11,.15);color:var(--yellow)}
+.badge.gray{background:var(--card2);color:var(--txt2)}
+
+/* ── Signals ── */
+.signal-list{display:flex;flex-direction:column;gap:10px}
+.signal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.signal-dir{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.signal-dir.buy{background:rgba(34,197,94,.15)}
+.signal-dir.sell{background:rgba(239,68,68,.15)}
+.signal-info{flex:1;min-width:120px}
+.signal-symbol{font-size:14px;font-weight:700;color:var(--txt)}
+.signal-meta{font-size:12px;color:var(--txt2);margin-top:3px}
+.signal-prices{display:flex;gap:14px;flex-wrap:wrap}
+.price-item{text-align:center}
+.price-label{font-size:10px;font-weight:600;text-transform:uppercase;color:var(--txt3)}
+.price-val{font-size:13px;font-weight:600;color:var(--txt)}
+.signal-score{text-align:center}
+.score-ring{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;border:3px solid var(--accent)}
+.signal-actions{display:flex;gap:8px}
+.btn-confirm{padding:8px 16px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn-confirm:hover{opacity:.85}
+.btn-reject{padding:8px 16px;border-radius:8px;border:1px solid var(--border2);background:none;color:var(--txt2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-reject:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.empty-state{text-align:center;padding:48px 20px;color:var(--txt3)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty-txt{font-size:14px}
+
+/* ── Control panel ── */
+.control-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:24px}
+.control-card{background:var(--card);border-radius:var(--r2);padding:20px;border:1px solid var(--border)}
+.control-label{font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:14px;text-transform:uppercase;letter-spacing:.4px}
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between}
+.toggle-name{font-size:14px;font-weight:600;color:var(--txt)}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--border2);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;border:none}
+.toggle.on{background:var(--accent)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s}
+.toggle.on::after{transform:translateX(20px)}
+.toggle-desc{font-size:11px;color:var(--txt3);margin-top:6px}
+
+/* ── Accounts ── */
+.account-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.account-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.account-card.active-acct{border-color:var(--accent)}
+.acct-icon{width:40px;height:40px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.acct-info{flex:1;min-width:120px}
+.acct-label{font-size:14px;font-weight:700;color:var(--txt)}
+.acct-meta{font-size:12px;color:var(--txt2);margin-top:3px}
+.acct-balance{font-size:16px;font-weight:800;color:var(--txt);text-align:right}
+.acct-balance-sub{font-size:11px;color:var(--txt3);text-align:right}
+.acct-actions{display:flex;gap:8px;flex-shrink:0}
+.btn-sm{padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;border:1px solid var(--border)}
+.btn-sm.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-sm.primary:hover{opacity:.85}
+.btn-sm.ghost{background:none;color:var(--txt2)}
+.btn-sm.ghost:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-sm.select{background:none;color:var(--accent);border-color:var(--accent)}
+.btn-sm.select:hover{background:var(--accent);color:#fff}
+
+/* ── Add account form ── */
+.add-form{background:var(--card);border-radius:var(--r2);padding:20px;border:1px solid var(--border)}
+.form-title{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:16px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--txt3)}
+.field input,.field select{padding:9px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--txt);font-size:13px;outline:none;transition:border .15s}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field select option{background:var(--bg2)}
+.btn-add{margin-top:14px;padding:10px 20px;border-radius:var(--r);background:var(--accent);color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.btn-add:hover{opacity:.85}
+.full-col{grid-column:1/-1}
+
+/* ── Trades table ── */
+.tbl-wrap{background:var(--card);border-radius:var(--r2);border:1px solid var(--border);overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:11px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--txt3);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--card2)}
+.trade-win{color:var(--green);font-weight:700}
+.trade-loss{color:var(--red);font-weight:700}
+
+/* ── PnL chart ── */
+.chart-wrap{background:var(--card);border-radius:var(--r2);border:1px solid var(--border);padding:20px;margin-bottom:16px}
+.chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.chart-title{font-size:14px;font-weight:700;color:var(--txt)}
+.chart-canvas{width:100%;height:160px}
+svg.pnl-chart{width:100%;height:160px}
+
+/* ── Report summary ── */
+.report-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:16px}
+.rep-card{background:var(--card2);border-radius:var(--r);padding:14px 16px}
+.rep-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--txt3);margin-bottom:6px}
+.rep-value{font-size:20px;font-weight:800;color:var(--txt)}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r);padding:12px 18px;font-size:13px;font-weight:500;color:var(--txt);z-index:999;display:none;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast.show{display:block;animation:slidein .2s ease}
+@keyframes slidein{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
+
+/* ── Days filter ── */
+.filter-btns{display:flex;gap:6px}
+.filter-btn{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border);background:none;color:var(--txt2);cursor:pointer;transition:all .15s}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ── Signal history ── */
+.signal-hist-card{background:var(--card);border-radius:var(--r2);border:1px solid var(--border);overflow:hidden}
+.signal-hist-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.signal-hist-row:last-child{border-bottom:none}
+.signal-hist-row:hover{background:var(--card2)}
+
+/* ── Mobile ── */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .content{padding:16px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .control-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .signal-card{flex-direction:column;align-items:flex-start}
+  .signal-actions{width:100%;justify-content:flex-end}
+  .account-card{flex-wrap:wrap}
+  .mob-nav{display:flex}
+}
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:100;padding:4px 0 env(safe-area-inset-bottom,0)}
+.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;color:var(--txt3);font-size:10px;font-weight:600;border:none;background:none}
+.mob-nav-item.active{color:var(--accent)}
+.mob-nav-item .icon{font-size:20px}
+@media(max-width:768px){.content{padding-bottom:80px}}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-brand-icon">📈</div>
+      <div class="sb-brand-name">TradeBot</div>
+      <div class="sb-brand-sub">Señales MT5 · Bridge & Deriv</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Panel</div>
+      <button class="sb-item active" onclick="showTab('overview')" id="nav-overview">
+        <span class="icon">🏠</span>Resumen
+      </button>
+      <button class="sb-item" onclick="showTab('signals')" id="nav-signals">
+        <span class="icon">⚡</span>Señales <span id="pending-badge" style="margin-left:auto;font-size:11px;font-weight:700;background:var(--accent);color:#fff;padding:1px 7px;border-radius:20px;display:none"></span>
+      </button>
+      <button class="sb-item" onclick="showTab('report')" id="nav-report">
+        <span class="icon">📊</span>Reporte
+      </button>
+      <div class="sb-section">Configuración</div>
+      <button class="sb-item" onclick="showTab('control')" id="nav-control">
+        <span class="icon">🎛️</span>Control bot
+      </button>
+      <button class="sb-item" onclick="showTab('accounts')" id="nav-accounts">
+        <span class="icon">🔗</span>Cuentas MT5
+      </button>
+    </nav>
+    <div class="sb-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="sb-avatar">?</div>
+        <div style="overflow:hidden">
+          <div class="user-name" id="sb-name">—</div>
+          <div class="user-email" id="sb-email">—</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Resumen</div>
+      <div class="agent-status">
+        <div class="dot" id="agent-dot"></div>
+        <span id="agent-label">Sin cuenta activa</span>
+        <select id="acct-selector" style="margin-left:10px;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12.5px;cursor:pointer" onchange="selectAccount(this.value)">
+          <option value="">— Seleccionar cuenta —</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── OVERVIEW ── -->
+      <div class="tab-content active" id="tab-overview">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Balance</div>
+            <div class="stat-value" id="stat-balance">—</div>
+            <div class="stat-sub" id="stat-currency"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Trades hoy</div>
+            <div class="stat-value" id="stat-trades">0</div>
+            <div class="stat-sub">sesión actual</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">PnL hoy</div>
+            <div class="stat-value" id="stat-pnl">0%</div>
+            <div class="stat-sub">porcentaje</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pérd. consec.</div>
+            <div class="stat-value" id="stat-losses">0</div>
+            <div class="stat-sub">seguidas</div>
+          </div>
+        </div>
+
+        <div style="background:var(--card);border-radius:var(--r2);border:1px solid var(--border);padding:16px 20px;margin-bottom:20px" id="stop-banner" style="display:none">
+          <div style="font-size:14px;font-weight:700;color:var(--red)">🚫 Bot detenido</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:4px" id="stop-reason"></div>
+        </div>
+
+        <div class="section-head">
+          <div class="section-title">Señales pendientes</div>
+          <span class="badge" id="overview-pending-ct">0</span>
+        </div>
+        <div class="signal-list" id="overview-signals">
+          <div class="empty-state"><div class="empty-icon">✅</div><div class="empty-txt">Sin señales pendientes</div></div>
+        </div>
+      </div>
+
+      <!-- ── SEÑALES ── -->
+      <div class="tab-content" id="tab-signals">
+        <div class="section-head">
+          <div class="section-title">Señales pendientes</div>
+          <button class="btn-sm primary" onclick="loadPending()">↻ Actualizar</button>
+        </div>
+        <div class="signal-list" id="signals-pending" style="margin-bottom:28px">
+          <div class="empty-state"><div class="empty-icon">✅</div><div class="empty-txt">Sin señales pendientes</div></div>
+        </div>
+
+        <div class="section-head">
+          <div class="section-title">Historial de señales</div>
+          <div class="filter-btns">
+            <button class="filter-btn active" onclick="loadSignalHistory(50)" id="sh-50">Últimas 50</button>
+            <button class="filter-btn" onclick="loadSignalHistory(20)" id="sh-20">20</button>
+          </div>
+        </div>
+        <div class="signal-hist-card" id="signal-history">
+          <div class="empty-state" style="padding:24px"><div class="empty-txt">Sin historial</div></div>
+        </div>
+      </div>
+
+      <!-- ── REPORTE ── -->
+      <div class="tab-content" id="tab-report">
+        <div class="section-head">
+          <div class="section-title">Reporte de rendimiento</div>
+          <div class="filter-btns">
+            <button class="filter-btn active" onclick="loadReport(7)" id="rep-7">7d</button>
+            <button class="filter-btn" onclick="loadReport(30)" id="rep-30">30d</button>
+            <button class="filter-btn" onclick="loadReport(90)" id="rep-90">90d</button>
+          </div>
+        </div>
+
+        <div class="report-grid" id="report-summary">
+          <div class="rep-card"><div class="rep-label">Trades</div><div class="rep-value" id="rep-total">—</div></div>
+          <div class="rep-card"><div class="rep-label">Wins</div><div class="rep-value" id="rep-wins" style="color:var(--green)">—</div></div>
+          <div class="rep-card"><div class="rep-label">Losses</div><div class="rep-value" id="rep-losses" style="color:var(--red)">—</div></div>
+          <div class="rep-card"><div class="rep-label">Win rate</div><div class="rep-value" id="rep-wr">—</div></div>
+          <div class="rep-card"><div class="rep-label">PnL total</div><div class="rep-value" id="rep-pnl">—</div></div>
+        </div>
+
+        <div class="chart-wrap">
+          <div class="chart-head">
+            <div class="chart-title">Curva PnL acumulado</div>
+          </div>
+          <svg class="pnl-chart" id="pnl-svg" viewBox="0 0 800 160" preserveAspectRatio="none">
+            <text x="400" y="90" text-anchor="middle" fill="#5b6480" font-size="13">Sin datos</text>
+          </svg>
+        </div>
+
+        <div class="section-head" style="margin-top:20px">
+          <div class="section-title">Historial de trades</div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Símbolo</th><th>Dir</th><th>Entrada</th><th>Cierre</th><th>Resultado</th><th>PnL</th>
+            </tr></thead>
+            <tbody id="trades-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--txt3);padding:28px">Sin trades cerrados</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── CONTROL BOT ── -->
+      <div class="tab-content" id="tab-control">
+        <div class="section-head"><div class="section-title">Control del bot</div></div>
+
+        <div class="control-grid">
+          <div class="control-card">
+            <div class="control-label">Análisis</div>
+            <div class="toggle-wrap">
+              <div class="toggle-name">Análisis M1/M15</div>
+              <button class="toggle" id="tog-analysis" onclick="toggleCmd('analysis')"></button>
+            </div>
+            <div class="toggle-desc">El agente escanea señales continuamente</div>
+          </div>
+          <div class="control-card">
+            <div class="control-label">Trading</div>
+            <div class="toggle-wrap">
+              <div class="toggle-name">Ejecutar trades</div>
+              <button class="toggle" id="tog-trading" onclick="toggleCmd('trading')"></button>
+            </div>
+            <div class="toggle-desc">Permite abrir posiciones en MT5</div>
+          </div>
+          <div class="control-card">
+            <div class="control-label">Ejecución</div>
+            <div class="toggle-wrap">
+              <div class="toggle-name">Modo automático</div>
+              <button class="toggle" id="tog-auto" onclick="toggleCmd('auto')"></button>
+            </div>
+            <div class="toggle-desc">Auto: ejecuta sin confirmación. Manual: señales aparecen aquí</div>
+          </div>
+        </div>
+
+        <div style="background:var(--card);border-radius:var(--r2);border:1px solid var(--border);padding:20px;margin-top:8px">
+          <div class="form-title" style="margin-bottom:12px">Símbolos activos del agente</div>
+          <div style="font-size:13px;color:var(--txt2);margin-bottom:12px">Los símbolos se detectan automáticamente según el broker (Bridge o Deriv).</div>
+          <div id="symbols-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+          <div style="font-size:11px;color:var(--txt3)">Bridge Markets: BullX500, BearX500, BullX777, BearX777, BullX1000, BearX1000 · Deriv: Volatility 75 Index, Volatility 100 Index</div>
+        </div>
+      </div>
+
+      <!-- ── CUENTAS ── -->
+      <div class="tab-content" id="tab-accounts">
+        <div class="section-head"><div class="section-title">Cuentas MT5</div><button class="btn-sm primary" onclick="loadAccounts()">↻</button></div>
+        <div class="account-list" id="account-list">
+          <div class="empty-state"><div class="empty-icon">🔗</div><div class="empty-txt">Sin cuentas guardadas</div></div>
+        </div>
+
+        <div class="add-form">
+          <div class="form-title">Agregar cuenta MT5</div>
+          <div class="form-grid">
+            <div class="field full-col">
+              <label>Servidor</label>
+              <select id="new-server" onchange="fillServerLabel()">
+                <option value="">Seleccionar servidor…</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Login (número)</label>
+              <input type="number" id="new-login" placeholder="12345678"/>
+            </div>
+            <div class="field">
+              <label>Contraseña MT5</label>
+              <input type="password" id="new-pass" placeholder="••••••"/>
+            </div>
+            <div class="field full-col">
+              <label>Etiqueta (opcional)</label>
+              <input type="text" id="new-label" placeholder="Ej: Mi cuenta Deriv Demo"/>
+            </div>
+          </div>
+          <button class="btn-add" onclick="doAddAccount()">Guardar cuenta</button>
+        </div>
+
+        <div style="margin-top:24px;background:var(--card);border-radius:var(--r2);border:1px solid var(--border);padding:20px">
+          <div class="form-title" style="margin-bottom:8px">Configurar agente (tu PC)</div>
+          <div style="font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:14px">
+            El agente corre en tu PC Windows con MT5 instalado. Después de agregar una cuenta, el dashboard te da el <strong style="color:var(--txt)">Account ID</strong> necesario para configurar el <code style="background:var(--card2);padding:2px 6px;border-radius:4px;font-size:12px">agent/.env</code>.
+          </div>
+          <div id="agent-guide" style="display:none">
+            <div style="background:var(--bg);border-radius:var(--r);padding:14px 16px;font-family:monospace;font-size:12.5px;color:var(--txt2);line-height:1.8;border:1px solid var(--border)">
+              SERVER_URL=<span style="color:var(--accent)" id="guide-url"></span><br>
+              TB_EMAIL=<span style="color:var(--green)" id="guide-email"></span><br>
+              TB_PASSWORD=<span style="color:var(--yellow)">tu_contraseña</span><br>
+              ACCOUNT_ID=<span style="color:var(--green)" id="guide-acct-id"></span><br>
+              MT5_LOGIN=<span style="color:var(--txt2)" id="guide-login"></span><br>
+              MT5_PASSWORD=<span style="color:var(--yellow)">tu_clave_mt5</span><br>
+              MT5_SERVER=<span style="color:var(--txt2)" id="guide-server"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- Mobile nav -->
+<div class="mob-nav">
+  <button class="mob-nav-item active" id="mob-overview" onclick="showTab('overview')"><span class="icon">🏠</span>Resumen</button>
+  <button class="mob-nav-item" id="mob-signals" onclick="showTab('signals')"><span class="icon">⚡</span>Señales</button>
+  <button class="mob-nav-item" id="mob-report" onclick="showTab('report')"><span class="icon">📊</span>Reporte</button>
+  <button class="mob-nav-item" id="mob-control" onclick="showTab('control')"><span class="icon">🎛️</span>Control</button>
+  <button class="mob-nav-item" id="mob-accounts" onclick="showTab('accounts')"><span class="icon">🔗</span>Cuentas</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+let _user    = null;
+let _accounts= [];
+let _acctId  = null;   // selected account id
+let _toggles = {analysis:false, trading:false, auto:false};
+let _repDays = 7;
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadMe();
+  await loadAccounts();
+  await loadServers();
+  await refreshStats();
+  await loadPending();
+  setInterval(refreshStats, 15000);
+  setInterval(loadPending, 20000);
+});
+
+async function loadMe(){
+  const r = await api('/api/auth/me');
+  if(!r.ok){ window.location.href='/'; return; }
+  _user = r.data;
+  document.getElementById('sb-name').textContent  = _user.name;
+  document.getElementById('sb-email').textContent = _user.email;
+  document.getElementById('sb-avatar').textContent= _user.name[0].toUpperCase();
+  document.getElementById('guide-email').textContent = _user.email;
+  document.getElementById('guide-url').textContent   = window.location.origin;
+}
+
+async function loadAccounts(){
+  const r = await api('/api/accounts');
+  if(!r.ok) return;
+  _accounts = r.data;
+  renderAccountList();
+  renderAccountSelector();
+  if(!_acctId && _accounts.length > 0){
+    _acctId = _accounts[0].id;
+    document.getElementById('acct-selector').value = _acctId;
+    await refreshStats();
+  }
+  updateAgentDot();
+}
+
+async function loadServers(){
+  const r = await api('/api/accounts/servers');
+  if(!r.ok) return;
+  const sel = document.getElementById('new-server');
+  r.data.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.name; o.textContent = `${s.label} (${s.name})`;
+    sel.appendChild(o);
+  });
+}
+
+/* ════════════════════════════════════════
+   TABS
+════════════════════════════════════════ */
+const TAB_TITLES = {overview:'Resumen',signals:'Señales',report:'Reporte',control:'Control bot',accounts:'Cuentas MT5'};
+function showTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mob-nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  const nb = document.getElementById('nav-'+name);
+  if(nb) nb.classList.add('active');
+  const mb = document.getElementById('mob-'+name);
+  if(mb) mb.classList.add('active');
+  document.getElementById('topbar-title').textContent = TAB_TITLES[name]||name;
+  if(name==='signals') { loadPending(); loadSignalHistory(50); }
+  if(name==='report')  { loadReport(_repDays); }
+  if(name==='accounts'){ loadAccounts(); }
+}
+
+/* ════════════════════════════════════════
+   STATS / OVERVIEW
+════════════════════════════════════════ */
+async function refreshStats(){
+  if(!_acctId) return;
+  const r = await api(`/api/stats?account_id=${_acctId}`);
+  if(!r.ok) return;
+  const d = r.data;
+  const bal = d.balance != null ? `${Number(d.balance).toFixed(2)}` : '—';
+  document.getElementById('stat-balance').textContent  = bal;
+  document.getElementById('stat-currency').textContent = d.currency||'';
+  document.getElementById('stat-trades').textContent   = d.trades_today||0;
+  const pnl = d.pnl_pct||0;
+  const pEl = document.getElementById('stat-pnl');
+  pEl.textContent = (pnl>=0?'+':'')+pnl.toFixed(2)+'%';
+  pEl.className   = 'stat-value '+(pnl>=0?'green':'red');
+  document.getElementById('stat-losses').textContent   = d.consecutive_losses||0;
+  const banner = document.getElementById('stop-banner');
+  if(d.stopped){
+    banner.style.display='block';
+    document.getElementById('stop-reason').textContent = d.stopped_reason||'Límite de riesgo alcanzado';
+  } else { banner.style.display='none'; }
+  // agent dot
+  const online = d.agent_online;
+  const dot = document.getElementById('agent-dot');
+  const lbl = document.getElementById('agent-label');
+  dot.className = 'dot '+(online?'online':'offline');
+  if(_accounts.length>0){
+    const a = _accounts.find(x=>x.id===_acctId);
+    lbl.textContent = a ? (online?'Agente online':'Agente offline')+' · '+a.label : (online?'Online':'Offline');
+  }
+}
+
+function selectAccount(id){
+  _acctId = id ? parseInt(id) : null;
+  refreshStats();
+  updateAgentGuide();
+}
+
+function updateAgentDot(){
+  const a = _accounts.find(x=>x.id===_acctId);
+  if(!a) return;
+  const online = a.agent_online;
+  document.getElementById('agent-dot').className='dot '+(online?'online':'offline');
+  document.getElementById('agent-label').textContent=(online?'Agente online':'Agente offline')+' · '+a.label;
+}
+
+/* ════════════════════════════════════════
+   SIGNALS
+════════════════════════════════════════ */
+async function loadPending(){
+  const r = await api('/api/signals/pending');
+  if(!r.ok) return;
+  const sigs = r.data;
+  const ct = sigs.length;
+  // badge
+  const pb = document.getElementById('pending-badge');
+  pb.textContent = ct; pb.style.display = ct>0?'inline':'none';
+  document.getElementById('overview-pending-ct').textContent = ct;
+  renderSignals('overview-signals', sigs, true);
+  renderSignals('signals-pending', sigs, true);
+}
+
+async function loadSignalHistory(limit=50){
+  document.querySelectorAll('[id^=sh-]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sh-'+limit)?.classList.add('active');
+  const q = _acctId ? `?account_id=${_acctId}&limit=${limit}` : `?limit=${limit}`;
+  const r = await api('/api/signals/history'+q);
+  if(!r.ok) return;
+  const el = document.getElementById('signal-history');
+  if(!r.data.length){ el.innerHTML='<div class="empty-state" style="padding:24px"><div class="empty-txt">Sin historial</div></div>'; return; }
+  el.innerHTML = r.data.map(s=>`
+    <div class="signal-hist-row">
+      <div style="width:28px;height:28px;border-radius:6px;background:${s.direction==='buy'?'rgba(34,197,94,.15)':'rgba(239,68,68,.15)'};display:flex;align-items:center;justify-content:center;font-size:14px">${s.direction==='buy'?'▲':'▼'}</div>
+      <div style="flex:1;min-width:90px">
+        <div style="font-size:13px;font-weight:700;color:var(--txt)">${s.symbol}</div>
+        <div style="font-size:11px;color:var(--txt3)">${fmtDt(s.timestamp)}</div>
+      </div>
+      <span class="badge ${statusColor(s.status)}">${s.status}</span>
+      <div style="font-size:12px;color:var(--txt2)">Score: <strong>${s.score??'—'}</strong></div>
+      <div style="font-size:12px;color:var(--txt2)">RSI: ${s.rsi_value?.toFixed(1)??'—'}</div>
+    </div>`).join('');
+}
+
+function renderSignals(containerId, sigs, showActions){
+  const el = document.getElementById(containerId);
+  if(!sigs.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-txt">Sin señales pendientes</div></div>'; return; }
+  el.innerHTML = sigs.map(s=>`
+    <div class="signal-card" id="sig-card-${s.id}">
+      <div class="signal-dir ${s.direction}">${s.direction==='buy'?'▲':'▼'}</div>
+      <div class="signal-info">
+        <div class="signal-symbol">${s.symbol} <span style="font-size:12px;font-weight:500;color:${s.direction==='buy'?'var(--green)':'var(--red)'}">${s.direction.toUpperCase()}</span></div>
+        <div class="signal-meta">${fmtDt(s.timestamp)} · Lot: ${s.lot_size??'—'}</div>
+      </div>
+      <div class="signal-prices">
+        <div class="price-item"><div class="price-label">Entrada</div><div class="price-val">${fmt(s.entry_price)}</div></div>
+        <div class="price-item"><div class="price-label">SL</div><div class="price-val" style="color:var(--red)">${fmt(s.sl)}</div></div>
+        <div class="price-item"><div class="price-label">TP</div><div class="price-val" style="color:var(--green)">${fmt(s.tp)}</div></div>
+        <div class="price-item"><div class="price-label">RSI</div><div class="price-val">${s.rsi_value?.toFixed(1)??'—'}</div></div>
+      </div>
+      <div class="signal-score"><div class="score-ring">${s.score??'—'}</div></div>
+      ${showActions?`<div class="signal-actions">
+        <button class="btn-confirm" onclick="confirmSig(${s.id})">✓ Confirmar</button>
+        <button class="btn-reject" onclick="rejectSig(${s.id})">✗ Rechazar</button>
+      </div>`:''}
+    </div>`).join('');
+}
+
+async function confirmSig(id){
+  const r = await api(`/api/signals/${id}/confirm`, 'POST');
+  if(r.ok){ toast('Señal confirmada — ejecutando…','ok'); document.getElementById('sig-card-'+id)?.remove(); loadPending(); }
+  else toast(r.error||'Error al confirmar','err');
+}
+async function rejectSig(id){
+  const r = await api(`/api/signals/${id}/reject`, 'POST');
+  if(r.ok){ toast('Señal rechazada','ok'); document.getElementById('sig-card-'+id)?.remove(); loadPending(); }
+  else toast(r.error||'Error','err');
+}
+
+/* ════════════════════════════════════════
+   REPORT
+════════════════════════════════════════ */
+async function loadReport(days){
+  _repDays = days;
+  ['7','30','90'].forEach(d=>document.getElementById('rep-'+d)?.classList.remove('active'));
+  document.getElementById('rep-'+days)?.classList.add('active');
+  const q = _acctId ? `?account_id=${_acctId}&days=${days}` : `?days=${days}`;
+  const r = await api('/api/report'+q);
+  if(!r.ok) return;
+  const d = r.data;
+  const s = d.summary;
+  document.getElementById('rep-total').textContent = s.total_trades??0;
+  document.getElementById('rep-wins').textContent  = s.wins??0;
+  document.getElementById('rep-losses').textContent= s.losses??0;
+  document.getElementById('rep-wr').textContent    = (s.win_rate??0)+'%';
+  const pnl = s.total_pnl??0;
+  const pEl  = document.getElementById('rep-pnl');
+  pEl.textContent = (pnl>=0?'+':'')+pnl.toFixed(2);
+  pEl.style.color = pnl>=0?'var(--green)':'var(--red)';
+  renderPnlChart(d.pnl_curve||[]);
+  renderTradeTable(d.trades||[]);
+}
+
+function renderPnlChart(curve){
+  const svg = document.getElementById('pnl-svg');
+  if(!curve.length){ svg.innerHTML='<text x="400" y="90" text-anchor="middle" fill="#5b6480" font-size="13">Sin datos</text>'; return; }
+  const W=800,H=160,PAD=20;
+  const vals = curve.map(p=>p.pnl);
+  const mn=Math.min(0,...vals), mx=Math.max(0,...vals);
+  const range = mx-mn||1;
+  const pts = curve.map((p,i)=>{
+    const x=PAD+(W-PAD*2)*i/Math.max(curve.length-1,1);
+    const y=H-PAD-(p.pnl-mn)/range*(H-PAD*2);
+    return `${x},${y}`;
+  });
+  const zero = H-PAD-(-mn)/range*(H-PAD*2);
+  const last = vals[vals.length-1];
+  const color = last>=0?'#22c55e':'#ef4444';
+  svg.innerHTML = `
+    <line x1="${PAD}" y1="${zero}" x2="${W-PAD}" y2="${zero}" stroke="#2a3050" stroke-width="1" stroke-dasharray="4"/>
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="${pts[pts.length-1].split(',')[0]}" cy="${pts[pts.length-1].split(',')[1]}" r="4" fill="${color}"/>`;
+}
+
+function renderTradeTable(trades){
+  const tb = document.getElementById('trades-tbody');
+  if(!trades.length){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--txt3);padding:28px">Sin trades cerrados</td></tr>'; return; }
+  tb.innerHTML = trades.map(t=>`
+    <tr>
+      <td><strong>${t.symbol}</strong></td>
+      <td style="color:${t.direction==='buy'?'var(--green)':'var(--red)'}">${t.direction?.toUpperCase()??'—'}</td>
+      <td>${fmt(t.open_price)}</td>
+      <td>${fmtDt(t.close_time)}</td>
+      <td><span class="badge ${t.result==='win'?'green':'red'}">${t.result}</span></td>
+      <td class="${t.result==='win'?'trade-win':'trade-loss'}">${t.profit>=0?'+':''}${Number(t.profit||0).toFixed(2)}</td>
+    </tr>`).join('');
+}
+
+/* ════════════════════════════════════════
+   CONTROL
+════════════════════════════════════════ */
+const CMD_MAP = {
+  analysis: {on:'analysis_start', off:'analysis_stop'},
+  trading:  {on:'trading_start',  off:'trading_stop'},
+  auto:     {on:'set_auto_true',  off:'set_auto_false'},
+};
+async function toggleCmd(key){
+  if(!_acctId){ toast('Selecciona una cuenta primero','err'); return; }
+  _toggles[key] = !_toggles[key];
+  const togEl = document.getElementById('tog-'+key);
+  togEl.classList.toggle('on', _toggles[key]);
+  const cmd = _toggles[key] ? CMD_MAP[key].on : CMD_MAP[key].off;
+  const r = await api(`/api/accounts/${_acctId}/command?command=${cmd}`, 'POST');
+  if(r.ok) toast(`Comando enviado: ${cmd}`,'ok');
+  else { toast(r.error||'Agente offline','err'); _toggles[key]=!_toggles[key]; togEl.classList.toggle('on',_toggles[key]); }
+}
+
+/* ════════════════════════════════════════
+   ACCOUNTS
+════════════════════════════════════════ */
+function renderAccountList(){
+  const el = document.getElementById('account-list');
+  if(!_accounts.length){
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">🔗</div><div class="empty-txt">Sin cuentas guardadas</div></div>';
+    return;
+  }
+  const brokerIcon = b => b==='bridge'?'🔵':b==='deriv'?'🟢':'⚪';
+  el.innerHTML = _accounts.map(a=>`
+    <div class="account-card ${a.id===_acctId?'active-acct':''}">
+      <div class="acct-icon">${brokerIcon(a.broker)}</div>
+      <div class="acct-info">
+        <div class="acct-label">${a.label}</div>
+        <div class="acct-meta">Login: ${a.login} · ${a.server} · <span style="color:${a.agent_online?'var(--green)':'var(--txt3)'}">● ${a.agent_online?'Online':'Offline'}</span></div>
+      </div>
+      <div>
+        <div class="acct-balance">${a.balance!=null?Number(a.balance).toFixed(2):'—'} <span style="font-size:12px;color:var(--txt3)">${a.currency||''}</span></div>
+        <div class="acct-balance-sub">ID: ${a.id}</div>
+      </div>
+      <div class="acct-actions">
+        ${a.id!==_acctId?`<button class="btn-sm select" onclick="selectAccount(${a.id});document.getElementById('acct-selector').value=${a.id};loadAccounts()">Seleccionar</button>`:'<span class="badge green">Activa</span>'}
+        <button class="btn-sm ghost" onclick="deleteAccount(${a.id},'${esc(a.label)}')">🗑</button>
+      </div>
+    </div>`).join('');
+  // guide
+  if(_acctId){
+    const a = _accounts.find(x=>x.id===_acctId);
+    if(a){
+      document.getElementById('agent-guide').style.display='block';
+      document.getElementById('guide-acct-id').textContent = a.id;
+      document.getElementById('guide-login').textContent   = a.login;
+      document.getElementById('guide-server').textContent  = a.server;
+    }
+  }
+}
+
+function renderAccountSelector(){
+  const sel = document.getElementById('acct-selector');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Seleccionar cuenta —</option>';
+  _accounts.forEach(a=>{
+    const o = document.createElement('option');
+    o.value=a.id; o.textContent=`${a.label} (${a.login})`;
+    sel.appendChild(o);
+  });
+  if(cur) sel.value=cur;
+}
+
+function fillServerLabel(){
+  const server = document.getElementById('new-server').value;
+  const label  = document.getElementById('new-label');
+  if(!label.value) label.value = server ? server.split('-')[0]+' '+server.split('-').slice(1).join(' ') : '';
+}
+
+async function doAddAccount(){
+  const server = document.getElementById('new-server').value.trim();
+  const login  = parseInt(document.getElementById('new-login').value);
+  const pass   = document.getElementById('new-pass').value.trim();
+  const label  = document.getElementById('new-label').value.trim();
+  if(!server||!login||!pass){ toast('Completa servidor, login y contraseña','err'); return; }
+  const r = await api('/api/accounts','POST',{label:label||`Cuenta ${login}`,login,password:pass,server});
+  if(r.ok){
+    toast(`Cuenta guardada (ID: ${r.data.account_id})`, 'ok');
+    document.getElementById('new-login').value='';
+    document.getElementById('new-pass').value='';
+    document.getElementById('new-label').value='';
+    await loadAccounts();
+    if(!_acctId){ _acctId=r.data.account_id; document.getElementById('acct-selector').value=_acctId; }
+    updateAgentGuide();
+  } else toast(r.error||'Error al guardar','err');
+}
+
+async function deleteAccount(id, label){
+  if(!confirm(`¿Eliminar cuenta "${label}"? Se borrarán todas sus señales y trades.`)) return;
+  const r = await api(`/api/accounts/${id}`,'DELETE');
+  if(r.ok){ toast('Cuenta eliminada','ok'); if(_acctId===id) _acctId=null; await loadAccounts(); }
+  else toast(r.error||'Error','err');
+}
+
+function updateAgentGuide(){
+  const a = _accounts.find(x=>x.id===_acctId);
+  if(!a){ document.getElementById('agent-guide').style.display='none'; return; }
+  document.getElementById('agent-guide').style.display='block';
+  document.getElementById('guide-acct-id').textContent = a.id;
+  document.getElementById('guide-login').textContent   = a.login;
+  document.getElementById('guide-server').textContent  = a.server;
+}
+
+/* ════════════════════════════════════════
+   AUTH
+════════════════════════════════════════ */
+async function doLogout(){
+  await fetch('/api/auth/logout',{method:'POST'});
+  window.location.href='/';
+}
+
+/* ════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════ */
+async function api(url, method='GET', body=null){
+  try{
+    const opts={method,headers:{}};
+    if(body){opts.body=JSON.stringify(body);opts.headers['Content-Type']='application/json';}
+    const r=await fetch(url,opts);
+    const data=await r.json();
+    if(!r.ok) return {ok:false,error:data.detail||JSON.stringify(data)};
+    return {ok:true,data};
+  }catch(e){ return {ok:false,error:'Error de red'}; }
+}
+
+function fmt(n){ if(n==null) return '—'; return Number(n).toFixed(n>100?2:5); }
+function fmtDt(s){ if(!s) return '—'; const d=new Date(s); return d.toLocaleDateString('es-ES',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}); }
+function esc(s){ return (s||'').replace(/'/g,"\\'"); }
+function statusColor(s){ return s==='pending'?'yellow':s==='executed'||s==='closed'?'green':s==='rejected'?'red':'gray'; }
+
+function toast(msg, type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show '+(type==='ok'?'ok':'err');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>

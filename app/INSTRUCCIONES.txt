@@ -1,0 +1,245 @@
+═══════════════════════════════════════════════════════════════
+  TRADEBOT FLUTTER — GUÍA COMPLETA
+═══════════════════════════════════════════════════════════════
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PARTE 1 — CORRER EN LOCAL (DESARROLLO)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REQUISITOS:
+  - Flutter instalado: https://docs.flutter.dev/get-started/install/windows
+  - Android Studio instalado (para emulador o ADB)
+  - El servidor FastAPI corriendo en localhost:8000
+
+PASO 1 — Verifica Flutter instalado:
+  flutter doctor
+
+PASO 2 — Instala dependencias:
+  cd "C:\Users\MI PC\Documents\GitHub\bot-traiding\app"
+  flutter pub get
+
+PASO 3 — Levanta el servidor (en otra terminal):
+  cd "C:\Users\MI PC\Documents\GitHub\bot-traiding\server"
+  & "C:\Users\MI PC\AppData\Local\Python\pythoncore-3.14-64\python.exe" -m uvicorn main:app --reload --port 8000
+
+PASO 4 — Abre un emulador Android o conecta tu celular por USB:
+  (En Android Studio: Device Manager → Create Device → Play)
+  O en celular: Activar "Opciones de desarrollador" → "Depuración USB"
+
+PASO 5 — Corre la app:
+  flutter run
+
+  NOTA: El archivo lib/core/config.dart tiene:
+    baseUrl = 'http://10.0.2.2:8000'   ← emulador Android apunta a localhost
+  Si usas celular físico por USB, cambia a la IP de tu PC en la red local:
+    baseUrl = 'http://192.168.1.X:8000'
+  Corre "ipconfig" en PowerShell para ver tu IP local.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PARTE 2 — DESPLEGAR EL SERVIDOR EN RAILWAY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 1 — Crea cuenta en Railway:
+  https://railway.app
+
+PASO 2 — Crea nuevo proyecto desde GitHub:
+  - New Project → Deploy from GitHub repo
+  - Selecciona el repo bot-traiding
+  - Railway detecta el Procfile automáticamente
+
+PASO 3 — Configura variables de entorno en Railway:
+  Ve a tu proyecto → Variables → Add Variable:
+
+  SECRET_KEY     = (genera una: python -c "import secrets; print(secrets.token_hex(32))")
+  DATABASE_URL   = (Railway te da una PostgreSQL gratis — copia la URL)
+  PORT           = 8000
+
+PASO 4 — Agrega PostgreSQL:
+  - En Railway: New → Database → Add PostgreSQL
+  - Copia la DATABASE_URL que aparece y pégala en las variables del servidor
+
+PASO 5 — Activa dominio público:
+  - Settings → Networking → Generate Domain
+  - Copia la URL, ejemplo: https://tradebot-production.up.railway.app
+
+PASO 6 — Actualiza requirements.txt para PostgreSQL:
+  En el archivo server/requirements.txt, quita el # de la línea:
+    psycopg2-binary==2.9.9
+
+PASO 7 — Haz push al repo (Railway redespliega solo):
+  git add .
+  git commit -m "deploy: enable psycopg2 for production"
+  git push origin main
+
+PASO 8 — Verifica que funciona:
+  Abre https://tu-dominio.railway.app en el navegador → debe verse el login
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PARTE 3 — ACTUALIZAR LA APP FLUTTER CON LA URL DE PRODUCCIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 1 — Edita lib/core/config.dart:
+  Cambia:
+    static const String baseUrl = 'http://10.0.2.2:8000';
+  Por:
+    static const String baseUrl = 'https://tu-dominio.railway.app';
+
+PASO 2 — Reconstruye la app (ver Parte 4 o 5 abajo)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PARTE 4 — GENERAR APK PARA INSTALAR DIRECTO (SIN PLAY STORE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PASO 1 — Asegúrate que config.dart apunta a tu servidor en Railway
+
+PASO 2 — Genera el APK:
+  cd "C:\Users\MI PC\Documents\GitHub\bot-traiding\app"
+  flutter build apk --release
+
+PASO 3 — El APK queda en:
+  build\app\outputs\flutter-apk\app-release.apk
+
+PASO 4 — Instala en tu celular:
+  - Transfiere el archivo APK al celular (WhatsApp, cable USB, Google Drive)
+  - En el celular: Ajustes → Seguridad → Instalar apps de fuentes desconocidas → Activar
+  - Abre el APK y acepta la instalación
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PARTE 5 — SUBIR A GOOGLE PLAY STORE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REQUISITOS:
+  - Cuenta de Google Play Developer ($25 pago único)
+    https://play.google.com/console
+
+── 5A. CREAR KEYSTORE (FIRMA DE LA APP) ──────────────────────
+  Solo se hace UNA VEZ. Guarda estos archivos para siempre.
+
+  PASO 1 — Genera el keystore:
+    cd "C:\Users\MI PC\Documents\GitHub\bot-traiding\app"
+    keytool -genkey -v -keystore tradebot-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias tradebot
+
+    Te pedirá:
+      - Contraseña del keystore (guárdala, la necesitas siempre)
+      - Nombre, organización, país (puedes poner lo que quieras)
+
+  PASO 2 — Crea el archivo android/key.properties:
+    Crea el archivo: app\android\key.properties
+    Con este contenido (cambia los valores):
+
+      storePassword=TU_CONTRASEÑA_KEYSTORE
+      keyPassword=TU_CONTRASEÑA_KEYSTORE
+      keyAlias=tradebot
+      storeFile=../tradebot-keystore.jks
+
+  PASO 3 — Configura android/app/build.gradle para usar el keystore:
+    Abre: app\android\app\build.gradle
+    Agrega arriba del bloque android { ... }:
+
+      def keystoreProperties = new Properties()
+      def keystorePropertiesFile = rootProject.file('key.properties')
+      if (keystorePropertiesFile.exists()) {
+          keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+      }
+
+    Dentro de android { ... }, agrega signingConfigs y modifica buildTypes:
+
+      signingConfigs {
+          release {
+              keyAlias keystoreProperties['keyAlias']
+              keyPassword keystoreProperties['keyPassword']
+              storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+              storePassword keystoreProperties['storePassword']
+          }
+      }
+      buildTypes {
+          release {
+              signingConfig signingConfigs.release
+          }
+      }
+
+── 5B. CONFIGURAR APP ID Y VERSIÓN ───────────────────────────
+
+  PASO 1 — Cambia el applicationId en android/app/build.gradle:
+    applicationId = "com.tuempresa.tradebot"
+    (debe ser único en Play Store, ej: com.xcalex.tradebot)
+
+  PASO 2 — Actualiza la versión en pubspec.yaml:
+    version: 1.0.0+1
+    (el número después del + es el versionCode, súbelo cada update)
+
+── 5C. GENERAR APP BUNDLE (formato para Play Store) ──────────
+
+  PASO 1 — Genera el bundle:
+    cd "C:\Users\MI PC\Documents\GitHub\bot-traiding\app"
+    flutter build appbundle --release
+
+  PASO 2 — El bundle queda en:
+    build\app\outputs\bundle\release\app-release.aab
+
+── 5D. SUBIR A PLAY STORE ────────────────────────────────────
+
+  PASO 1 — Entra a Google Play Console:
+    https://play.google.com/console
+
+  PASO 2 — Crea nueva app:
+    - Create app → nombre: TradeBot → idioma: Español → App → Free
+
+  PASO 3 — Completa la información requerida:
+    - App content: responde las preguntas de contenido
+    - Store listing: descripción, screenshots (mínimo 2), ícono 512x512
+    - Content rating: completa el cuestionario
+    - Target audience: selecciona 18+
+
+  PASO 4 — Sube el bundle:
+    - Testing → Internal testing → Create release
+    - Upload → selecciona el archivo app-release.aab
+    - Guarda y publica la prueba interna
+
+  PASO 5 — Prueba con testers internos (tu correo):
+    - Agrega tu email como tester interno
+    - Instala desde el link de prueba
+
+  PASO 6 — Cuando esté listo, publica en producción:
+    - Production → Create release → sube el mismo .aab
+    - Review and publish
+
+  TIEMPO DE REVISIÓN: Google tarda 1-7 días en aprobar apps nuevas.
+
+── 5E. ACTUALIZACIONES FUTURAS ───────────────────────────────
+
+  Para cada update:
+  1. Sube el versionCode en pubspec.yaml: version: 1.0.1+2
+  2. flutter build appbundle --release
+  3. En Play Console → Production → Create new release → sube el nuevo .aab
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ARCHIVOS IMPORTANTES — NO SUBIR A GIT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  tradebot-keystore.jks   → firma de la app, NUNCA la pierdas ni la subas
+  android/key.properties  → contraseñas del keystore
+  server/.env             → claves del servidor
+
+  Asegúrate que .gitignore tenga:
+    *.jks
+    key.properties
+    .env
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  RESUMEN RÁPIDO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Dev local:        flutter run
+  APK directo:      flutter build apk --release
+  Play Store:       flutter build appbundle --release  →  subir .aab
+  Servidor local:   python -m uvicorn main:app --reload --port 8000
+  Servidor prod:    Railway (automático con push a GitHub)
+
+═══════════════════════════════════════════════════════════════

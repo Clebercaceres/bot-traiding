@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TradeBot — Registro</title>
+<style>
+:root{--accent:#5046e4;--bg:#eef0f6;--card:#fff;--border:#e0e3ef;--txt:#111827;--txt2:#5b6480;--red:#e0362b;--r:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.box{background:var(--card);border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(16,24,64,.10)}
+.logo{text-align:center;margin-bottom:28px}
+.logo-icon{font-size:40px;margin-bottom:8px}
+.logo-title{font-size:22px;font-weight:800}
+.logo-sub{font-size:13px;color:var(--txt2);margin-top:4px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.field input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;background:var(--bg);color:var(--txt);outline:none;transition:border .15s}
+.field input:focus{border-color:var(--accent)}
+.btn{width:100%;padding:13px;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;border:none;background:var(--accent);color:#fff;margin-top:4px;transition:opacity .15s}
+.btn:hover{opacity:.9}
+.link{text-align:center;margin-top:18px;font-size:13px;color:var(--txt2)}
+.link a{color:var(--accent);font-weight:600;text-decoration:none}
+.err{background:#fde8e7;color:var(--red);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">
+    <div class="logo-icon">📈</div>
+    <div class="logo-title">TradeBot</div>
+    <div class="logo-sub">Crea tu cuenta gratuita</div>
+  </div>
+  <div class="err" id="err"></div>
+  <div class="field"><label>Nombre</label><input type="text" id="name" placeholder="Tu nombre" autocomplete="name"/></div>
+  <div class="field"><label>Email</label><input type="email" id="email" placeholder="tu@email.com" autocomplete="email"/></div>
+  <div class="field"><label>Contraseña</label><input type="password" id="pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/></div>
+  <button class="btn" onclick="doRegister()">Crear cuenta</button>
+  <div class="link">¿Ya tienes cuenta? <a href="/">Inicia sesión</a></div>
+</div>
+<script>
+document.addEventListener('keydown', e=>{ if(e.key==='Enter') doRegister(); });
+async function doRegister(){
+  const name=document.getElementById('name').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const pass=document.getElementById('pass').value;
+  const err=document.getElementById('err');
+  err.style.display='none';
+  if(!name||!email||!pass){err.textContent='Completa todos los campos.';err.style.display='block';return;}
+  try{
+    const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password:pass})});
+    const d=await r.json();
+    if(d.ok) window.location.href='/dashboard';
+    else{err.textContent=d.detail||'Error al registrarse';err.style.display='block';}
+  }catch(e){err.textContent='Error de red';err.style.display='block';}
+}
+</script>
+</body>
+</html>

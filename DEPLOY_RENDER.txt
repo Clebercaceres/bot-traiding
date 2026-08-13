@@ -1,0 +1,234 @@
+==============================================================
+  GUIA COMPLETA: DESPLEGAR TRADEBOT EN RENDER.COM
+==============================================================
+Fecha: 2026-08-13
+Stack: FastAPI + PostgreSQL + WebSocket + MetaApi
+
+
+--------------------------------------------------------------
+ANTES DE EMPEZAR — VALORES QUE NECESITAS TENER LISTOS
+--------------------------------------------------------------
+
+1. METAAPI_TOKEN
+   - Ve a: https://app.metaapi.cloud
+   - Crea cuenta gratuita → Login
+   - Panel izquierdo → "API access" → "Tokens"
+   - Clic "Create token" → nombre: tradebot-prod → Crear
+   - Copia el token completo (empieza con eyJ...)
+
+2. FIELD_ENCRYPTION_KEY
+   - Genera en tu PC con Python:
+     python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   - Guarda ese valor (no lo pierdas — si cambias esta clave
+     las contraseñas guardadas no se podrán descifrar)
+
+3. SECRET_KEY (Render la genera automático — no necesitas hacer nada)
+
+
+--------------------------------------------------------------
+PASO 1 — SUBIR CAMBIOS AL REPO GITHUB
+--------------------------------------------------------------
+
+Asegurate de que estos archivos esten en el repo:
+
+  /render.yaml           (ya existe)
+  /server/requirements.txt  (ya existe)
+  /server/config.py      (ya actualizado)
+  /Procfile              (ya existe, Render no lo usa pero no molesta)
+
+Commit y push al repo (pide permiso a Claude antes de commitear):
+
+  git add render.yaml server/config.py
+  git commit -m "add: render.yaml + postgres URL fix"
+  git push origin main
+
+
+--------------------------------------------------------------
+PASO 2 — CREAR CUENTA EN RENDER
+--------------------------------------------------------------
+
+1. Ve a: https://render.com
+2. Clic "Get Started for Free"
+3. Sign up con GitHub (recomendado — acceso directo al repo)
+4. Autoriza Render en GitHub cuando lo pida
+
+
+--------------------------------------------------------------
+PASO 3 — CREAR EL SERVICIO (2 opciones)
+--------------------------------------------------------------
+
+=== OPCION A: Blueprint (render.yaml) — MAS FACIL ===
+
+1. En Render dashboard → clic "+ New" → "Blueprint"
+2. Conecta tu repo GitHub: busca "bot-traiding"
+3. Render detecta render.yaml automaticamente
+4. Clic "Apply" → crea el Web Service + PostgreSQL juntos
+5. Ir al PASO 4 para configurar variables
+
+=== OPCION B: Manual ===
+
+--- Primero crear la base de datos ---
+1. "+ New" → "PostgreSQL"
+2. Name: tradebot-db
+3. Database: tradebot
+4. User: tradebot
+5. Region: Oregon (US West) — el mas barato
+6. Plan: FREE
+7. Clic "Create Database"
+8. Copia el "Internal Database URL" (lo usas en el paso 4)
+
+--- Luego crear el web service ---
+1. "+ New" → "Web Service"
+2. Conecta repo GitHub: bot-traiding
+3. Configuracion:
+   - Name: tradebot-server
+   - Region: Oregon (mismo que la DB)
+   - Branch: main
+   - Root Directory: server
+   - Runtime: Python 3
+   - Build Command: pip install -r requirements.txt
+   - Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT
+4. Plan: FREE (512 MB RAM)
+5. NO hagas Deploy todavia — primero el PASO 4
+
+
+--------------------------------------------------------------
+PASO 4 — CONFIGURAR VARIABLES DE ENTORNO
+--------------------------------------------------------------
+
+En el Web Service → tab "Environment" → Add Environment Variable:
+
+  Variable              Valor
+  ──────────────────────────────────────────────────────────
+  SECRET_KEY            (genera con: python -c "import secrets; print(secrets.token_hex(32))")
+  FIELD_ENCRYPTION_KEY  (el valor que generaste en el prereq)
+  METAAPI_TOKEN         (el token de app.metaapi.cloud)
+  DATABASE_URL          (Internal Database URL de tu PostgreSQL en Render)
+  HOST                  0.0.0.0
+
+IMPORTANTE — DATABASE_URL:
+  - Si usaste Blueprint (Opcion A): Render la inyecta automatico
+  - Si fue Manual (Opcion B): pega el Internal Database URL directamente
+  - El valor debe empezar con postgresql:// (no postgres://)
+    Render da postgres:// pero config.py lo corrige automaticamente
+
+Clic "Save Changes"
+
+
+--------------------------------------------------------------
+PASO 5 — PRIMER DEPLOY
+--------------------------------------------------------------
+
+1. Tab "Events" o "Deploys" → clic "Deploy latest commit"
+   (o si es primera vez ya lo hace al guardar variables)
+2. Espera ~3-5 minutos
+3. Verifica en los logs que ves:
+   - "INFO:     Application startup complete"
+   - No debe haber errores de DB ni de imports
+
+Si ves error "ModuleNotFoundError":
+  - Verifica que Root Directory = server
+  - Verifica que Build Command = pip install -r requirements.txt
+
+Si ves error de PostgreSQL:
+  - Verifica DATABASE_URL apunta al Internal URL (no External)
+  - Internal URL es mas rapido y gratis dentro de Render
+
+
+--------------------------------------------------------------
+PASO 6 — VERIFICAR QUE FUNCIONA
+--------------------------------------------------------------
+
+1. En el servicio → copia la URL publica (ej: https://tradebot-server.onrender.com)
+2. Abre en browser: https://TU-URL.onrender.com/docs
+   Debe mostrar la interfaz Swagger de FastAPI
+3. Prueba endpoint: GET /health o GET /
+4. Intenta registrar un usuario desde la app Flutter
+   apuntando a la nueva URL
+
+
+--------------------------------------------------------------
+PASO 7 — ACTUALIZAR LA APP FLUTTER
+--------------------------------------------------------------
+
+En app/lib/main.dart o donde tengas la URL del servidor:
+
+  Cambia:
+    http://localhost:8000   o   ws://localhost:8000
+  Por:
+    https://TU-URL.onrender.com
+    wss://TU-URL.onrender.com   (para WebSocket)
+
+Rebuild la app Flutter con la nueva URL.
+
+
+--------------------------------------------------------------
+PASO 8 — CONFIGURAR AUTO-DEPLOY (opcional pero recomendado)
+--------------------------------------------------------------
+
+Settings → "Auto-Deploy" → ON
+Cada push a main hace deploy automatico. Igual que Vercel.
+
+
+--------------------------------------------------------------
+COSTOS
+--------------------------------------------------------------
+
+Plan FREE incluye:
+  - Web Service: gratis (se duerme tras 15 min sin requests)
+  - PostgreSQL: gratis por 90 dias, luego $7/mes
+
+Para produccion real (sin cold starts):
+  - Web Service Starter: $7/mes
+  - PostgreSQL Starter:  $7/mes
+  - TOTAL: $14/mes
+
+El cold start del free tier tarda ~30 segundos en despertar.
+Para un bot de trading en produccion real, pagar $7/mes por
+el web service vale la pena (sin interrupciones en WebSocket).
+
+
+--------------------------------------------------------------
+LIMITES FREE TIER
+--------------------------------------------------------------
+
+  - 512 MB RAM
+  - 0.1 CPU
+  - 750 horas/mes (alcanza para 1 servicio 24/7)
+  - PostgreSQL: 1 GB storage, expira 90 dias
+  - Logs: 14 dias de retencion
+  - Sin tarjeta de credito para empezar
+
+
+--------------------------------------------------------------
+SOLUCION DE PROBLEMAS COMUNES
+--------------------------------------------------------------
+
+ERROR: "Application failed to start"
+  → Revisa logs completos. Busca el primer error rojo.
+  → Verifica que todas las env vars estan configuradas.
+
+ERROR: "cannot connect to database"
+  → DATABASE_URL incorrecto. Usa Internal URL, no External.
+
+ERROR: "ModuleNotFoundError: No module named 'metaapi_cloud_sdk'"
+  → Root Directory no esta en server/
+  → O Build Command no corre pip install correctamente
+
+WebSocket se desconecta en free tier:
+  → Normal. El servicio duerme. Upgrade a $7/mes elimina esto.
+
+Bot no ejecuta trades:
+  → METAAPI_TOKEN no configurado o invalido
+  → Verificar en logs: "[MT5] Provisionando cuenta MetaApi..."
+
+
+--------------------------------------------------------------
+CONTACTO / SOPORTE
+--------------------------------------------------------------
+
+Render docs:   https://render.com/docs
+MetaApi docs:  https://metaapi.cloud/docs/client/
+FastAPI docs:  https://fastapi.tiangolo.com/
+
+==============================================================

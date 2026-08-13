@@ -1,0 +1,5 @@
+# 1. Instalar bcrypt compatible
+& "C:\Users\MI PC\AppData\Local\Python\pythoncore-3.14-64\python.exe" -m pip install "bcrypt==4.0.1"
+
+# 2. Levantar servidor
+& "C:\Users\MI PC\AppData\Local\Python\pythoncore-3.14-64\python.exe" -m uvicorn main:app --reload --port 8000

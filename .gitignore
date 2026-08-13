@@ -1,0 +1,10 @@
+*.db
+*.db-shm
+*.db-wal
+.env
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+vapid_private.pem
+vapid_public.pem

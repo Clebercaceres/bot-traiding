@@ -1,8 +1,0 @@
-MetaTrader5
-pandas
-numpy
-fastapi
-uvicorn[standard]
-jinja2
-pywebpush
-cryptography
