@@ -179,24 +179,55 @@ svg.pnl-chart{width:100%;height:160px}
 .signal-hist-row:last-child{border-bottom:none}
 .signal-hist-row:hover{background:var(--card2)}
 
-/* ── Mobile ── */
+/* ── Mobile nav base (must be before media query) ── */
+.mob-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--bg2);border-top:1px solid var(--border);
+  z-index:200;
+  padding:6px 0 env(safe-area-inset-bottom,8px);
+}
+.mob-nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 2px;cursor:pointer;color:var(--txt3);
+  font-size:9.5px;font-weight:600;letter-spacing:.3px;
+  border:none;background:none;transition:color .15s;
+}
+.mob-nav-item.active{color:var(--accent)}
+.mob-nav-item .icon{font-size:22px;line-height:1}
+/* Mobile topbar adjustments */
+.mob-topbar-right{display:flex;align-items:center;gap:6px}
+
+/* ── Media query (overrides base) ── */
 @media(max-width:768px){
   .sidebar{display:none}
   .main{margin-left:0}
-  .content{padding:16px}
-  .stats-grid{grid-template-columns:1fr 1fr}
+  .mob-nav{display:flex}
+  .content{padding:12px 14px;padding-bottom:90px}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .stat-card{padding:14px 16px}
+  .stat-value{font-size:22px}
   .control-grid{grid-template-columns:1fr}
   .form-grid{grid-template-columns:1fr}
-  .signal-card{flex-direction:column;align-items:flex-start}
-  .signal-actions{width:100%;justify-content:flex-end}
+  .signal-card{flex-direction:column;align-items:flex-start;gap:10px}
+  .signal-actions{width:100%;display:flex;gap:8px}
+  .signal-actions .btn-confirm,.signal-actions .btn-reject{flex:1;text-align:center}
   .account-card{flex-wrap:wrap}
-  .mob-nav{display:flex}
+  .acct-actions{width:100%;justify-content:flex-end;margin-top:4px}
+  .tbl-wrap{font-size:11px}
+  th,td{padding:8px 10px}
+  /* Topbar: hide verbose text, compact */
+  .topbar{padding:10px 14px;gap:8px}
+  .topbar-title{font-size:15px}
+  #agent-label{display:none}
+  #acct-selector{max-width:140px;font-size:11.5px;padding:5px 8px}
+  .report-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+  .rep-card{padding:10px 12px}
+  .rep-value{font-size:17px}
+  .chart-wrap{padding:14px}
+  .signal-hist-row{flex-wrap:wrap;gap:8px;padding:10px 12px}
+  .add-form{padding:16px}
 }
-.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:100;padding:4px 0 env(safe-area-inset-bottom,0)}
-.mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;color:var(--txt3);font-size:10px;font-weight:600;border:none;background:none}
-.mob-nav-item.active{color:var(--accent)}
-.mob-nav-item .icon{font-size:20px}
-@media(max-width:768px){.content{padding-bottom:80px}}
 </style>
 </head>
 <body>
@@ -244,11 +275,13 @@ svg.pnl-chart{width:100%;height:160px}
   <div class="main">
     <div class="topbar">
       <div class="topbar-title" id="topbar-title">Resumen</div>
-      <div class="agent-status">
-        <div class="dot" id="agent-dot"></div>
-        <span id="agent-label">Sin cuenta activa</span>
-        <select id="acct-selector" style="margin-left:10px;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12.5px;cursor:pointer" onchange="selectAccount(this.value)">
-          <option value="">— Seleccionar cuenta —</option>
+      <div class="mob-topbar-right">
+        <div class="agent-status">
+          <div class="dot" id="agent-dot"></div>
+          <span id="agent-label">Sin cuenta activa</span>
+        </div>
+        <select id="acct-selector" style="padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12.5px;cursor:pointer" onchange="selectAccount(this.value)">
+          <option value="">— Cuenta —</option>
         </select>
       </div>
     </div>
@@ -257,6 +290,13 @@ svg.pnl-chart{width:100%;height:160px}
 
       <!-- ── OVERVIEW ── -->
       <div class="tab-content active" id="tab-overview">
+        <!-- Mobile account bar -->
+        <div id="mob-acct-bar" style="display:none;background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:10px 14px;margin-bottom:12px;align-items:center;gap:10px">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--txt3)" id="mob-dot"></div>
+          <div style="flex:1;font-size:13px;font-weight:600;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="mob-acct-name">Sin cuenta</div>
+          <div style="font-size:12px;color:var(--txt2)" id="mob-acct-bal"></div>
+        </div>
+
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-label">Balance</div>
@@ -409,10 +449,8 @@ svg.pnl-chart{width:100%;height:160px}
           <div class="form-title">Agregar cuenta MT5</div>
           <div class="form-grid">
             <div class="field full-col">
-              <label>Servidor</label>
-              <select id="new-server" onchange="fillServerLabel()">
-                <option value="">Seleccionar servidor…</option>
-              </select>
+              <label>Servidor MT5</label>
+              <input type="text" id="new-server" placeholder="Ej: Deriv-Demo, BridgeMarkets-Live"/>
             </div>
             <div class="field">
               <label>Login (número)</label>
@@ -480,7 +518,7 @@ let _repDays = 7;
 document.addEventListener('DOMContentLoaded', async () => {
   await loadMe();
   await loadAccounts();
-  await loadServers();
+
   await refreshStats();
   await loadPending();
   setInterval(refreshStats, 15000);
@@ -512,16 +550,6 @@ async function loadAccounts(){
   updateAgentDot();
 }
 
-async function loadServers(){
-  const r = await api('/api/accounts/servers');
-  if(!r.ok) return;
-  const sel = document.getElementById('new-server');
-  r.data.forEach(s => {
-    const o = document.createElement('option');
-    o.value = s.name; o.textContent = `${s.label} (${s.name})`;
-    sel.appendChild(o);
-  });
-}
 
 /* ════════════════════════════════════════
    TABS
@@ -572,6 +600,15 @@ async function refreshStats(){
   if(_accounts.length>0){
     const a = _accounts.find(x=>x.id===_acctId);
     lbl.textContent = a ? (online?'Agente online':'Agente offline')+' · '+a.label : (online?'Online':'Offline');
+  }
+  // Mobile account bar
+  const mobBar = document.getElementById('mob-acct-bar');
+  if(mobBar && window.innerWidth <= 768) {
+    mobBar.style.display = 'flex';
+    const acct = _accounts.find(x=>x.id===_acctId);
+    document.getElementById('mob-dot').style.background = online ? 'var(--green)' : 'var(--red)';
+    document.getElementById('mob-acct-name').textContent = acct ? acct.label : 'Sin cuenta';
+    document.getElementById('mob-acct-bal').textContent = bal ? `$${bal}` : '';
   }
 }
 
@@ -780,7 +817,7 @@ function renderAccountList(){
 function renderAccountSelector(){
   const sel = document.getElementById('acct-selector');
   const cur = sel.value;
-  sel.innerHTML = '<option value="">— Seleccionar cuenta —</option>';
+  sel.innerHTML = '<option value="">— Cuenta —</option>';
   _accounts.forEach(a=>{
     const o = document.createElement('option');
     o.value=a.id; o.textContent=`${a.label} (${a.login})`;
@@ -789,11 +826,7 @@ function renderAccountSelector(){
   if(cur) sel.value=cur;
 }
 
-function fillServerLabel(){
-  const server = document.getElementById('new-server').value;
-  const label  = document.getElementById('new-label');
-  if(!label.value) label.value = server ? server.split('-')[0]+' '+server.split('-').slice(1).join(' ') : '';
-}
+
 
 async function doAddAccount(){
   const server = document.getElementById('new-server').value.trim();
