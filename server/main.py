@@ -386,6 +386,40 @@ def metaapi_status():
     return {"configured": bool(config.METAAPI_TOKEN)}
 
 
+@app.post("/api/accounts/{account_id}/sync-balance")
+async def sync_balance(account_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Fetch balance from MetaApi and update DB — no engine needed."""
+    acct = db.query(Account).filter(Account.id == account_id, Account.user_id == user.id).first()
+    if not acct:
+        raise HTTPException(404, "Cuenta no encontrada")
+    if not acct.metaapi_account_id or not config.METAAPI_TOKEN:
+        raise HTTPException(503, "Cuenta sin MetaApi ID o token no configurado")
+    engine = _mt5_engines.get(account_id)
+    if engine:
+        try:
+            bal = await engine._conn.get_balance()
+            acct.balance = bal
+            db.commit()
+            return {"balance": bal, "currency": acct.currency}
+        except Exception:
+            pass
+    # Engine no activo — conexión rápida solo para leer balance
+    from mt5_connector import MT5Connector
+    conn = MT5Connector(config.METAAPI_TOKEN, acct.metaapi_account_id)
+    try:
+        info = await conn.connect()
+        bal  = info.get("balance", 0.0)
+        cur  = info.get("currency", "USD")
+        acct.balance  = bal
+        acct.currency = cur
+        db.commit()
+        return {"balance": bal, "currency": cur}
+    except Exception as e:
+        raise HTTPException(503, f"Error conectando MetaApi: {e}")
+    finally:
+        await conn.disconnect()
+
+
 # ─── Stats y reporte ─────────────────────────────────────────────────────────
 
 @app.get("/api/stats")
