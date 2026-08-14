@@ -188,8 +188,8 @@ async def add_account(req: AccountRequest, user: User = Depends(get_current_user
         existing.server    = req.server or existing.server
         existing.broker    = broker
         db.commit()
-        # Re-provisionar si es Bridge y no tiene metaapi_account_id
-        if broker == "bridge" and not existing.metaapi_account_id and config.METAAPI_TOKEN:
+        # Re-provisionar en MetaApi si no tiene metaapi_account_id aún
+        if not existing.metaapi_account_id and config.METAAPI_TOKEN and req.password:
             try:
                 maid = await provision_account(
                     config.METAAPI_TOKEN, existing.login,
@@ -214,8 +214,8 @@ async def add_account(req: AccountRequest, user: User = Depends(get_current_user
     db.commit()
     db.refresh(acct)
 
-    # Provisionar en MetaApi si es Bridge y hay token configurado
-    if broker == "bridge" and req.password and config.METAAPI_TOKEN:
+    # Provisionar en MetaApi (Deriv + Bridge) si hay token configurado
+    if req.password and config.METAAPI_TOKEN:
         try:
             maid = await provision_account(
                 config.METAAPI_TOKEN, req.login,
@@ -287,7 +287,11 @@ async def send_command(
     # Fallback: agente local vía WebSocket (para quien aún lo use)
     sent = await ws_manager.send_command(account_id, command)
     if not sent:
-        raise HTTPException(503, "Sin conexión. Verifica que MetaApi esté configurado o el agente local esté corriendo.")
+        if not config.METAAPI_TOKEN:
+            raise HTTPException(503, "METAAPI_TOKEN no configurado en el servidor. Agrégalo en Render → Environment.")
+        if not acct.metaapi_account_id:
+            raise HTTPException(503, "Cuenta sin MetaApi ID. Borra la cuenta y agrégala de nuevo (el token ya debe estar en Render).")
+        raise HTTPException(503, "Agente offline. Verifica que el bot local esté corriendo y conectado.")
     return {"ok": True}
 
 
@@ -375,6 +379,11 @@ def signals_history(
         q = q.filter(Signal.account_id == account_id)
     sigs = q.order_by(Signal.id.desc()).limit(limit).all()
     return [_signal_dict(s) for s in sigs]
+
+
+@app.get("/api/config/metaapi")
+def metaapi_status():
+    return {"configured": bool(config.METAAPI_TOKEN)}
 
 
 # ─── Stats y reporte ─────────────────────────────────────────────────────────

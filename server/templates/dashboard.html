@@ -468,17 +468,30 @@ svg.pnl-chart{width:100%;height:160px}
           <button class="btn-add" onclick="doAddAccount()">Guardar cuenta</button>
         </div>
 
-        <div style="margin-top:24px;background:var(--card);border-radius:var(--r2);border:1px solid var(--border);padding:20px">
-          <div class="form-title" style="margin-bottom:8px">Configurar agente (tu PC)</div>
-          <div style="font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:14px">
-            El agente corre en tu PC Windows con MT5 instalado. Después de agregar una cuenta, el dashboard te da el <strong style="color:var(--txt)">Account ID</strong> necesario para configurar el <code style="background:var(--card2);padding:2px 6px;border-radius:4px;font-size:12px">agent/.env</code>.
+        <div id="metaapi-status-card" style="margin-top:24px;background:var(--card);border-radius:var(--r2);border:1px solid var(--border);padding:20px">
+          <div id="metaapi-ok" style="display:none">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:18px">☁️</span>
+              <div class="form-title" style="margin:0;color:var(--green)">MetaApi conectado</div>
+            </div>
+            <div style="font-size:13px;color:var(--txt2)">
+              Tu cuenta se conecta vía MetaApi cloud — no necesitas agente local ni MT5 en tu PC.
+              Al guardar la cuenta, el bot se provisiona automáticamente en la nube.
+            </div>
+            <div id="agent-guide" style="margin-top:12px;display:none">
+              <div style="font-size:12px;color:var(--txt3)">Account ID para referencia: <strong style="color:var(--txt)" id="guide-acct-id"></strong></div>
+            </div>
           </div>
-          <div id="agent-guide" style="display:none">
+          <div id="metaapi-missing" style="display:none">
+            <div class="form-title" style="margin-bottom:8px">Configurar agente (tu PC)</div>
+            <div style="font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:14px">
+              MetaApi no configurado en el servidor. El agente corre en tu PC con MT5 instalado.
+            </div>
             <div style="background:var(--bg);border-radius:var(--r);padding:14px 16px;font-family:monospace;font-size:12.5px;color:var(--txt2);line-height:1.8;border:1px solid var(--border)">
               SERVER_URL=<span style="color:var(--accent)" id="guide-url"></span><br>
               TB_EMAIL=<span style="color:var(--green)" id="guide-email"></span><br>
               TB_PASSWORD=<span style="color:var(--yellow)">tu_contraseña</span><br>
-              ACCOUNT_ID=<span style="color:var(--green)" id="guide-acct-id"></span><br>
+              ACCOUNT_ID=<span style="color:var(--green)" id="guide-acct-id2"></span><br>
               MT5_LOGIN=<span style="color:var(--txt2)" id="guide-login"></span><br>
               MT5_PASSWORD=<span style="color:var(--yellow)">tu_clave_mt5</span><br>
               MT5_SERVER=<span style="color:var(--txt2)" id="guide-server"></span>
@@ -515,8 +528,14 @@ let _repDays = 7;
 /* ════════════════════════════════════════
    INIT
 ════════════════════════════════════════ */
+let _metaapiOk = false;
+
 document.addEventListener('DOMContentLoaded', async () => {
   await loadMe();
+  const maCfg = await api('/api/config/metaapi');
+  _metaapiOk = maCfg.ok && maCfg.data.configured;
+  document.getElementById('metaapi-ok').style.display      = _metaapiOk ? 'block' : 'none';
+  document.getElementById('metaapi-missing').style.display = _metaapiOk ? 'none'  : 'block';
   await loadAccounts();
 
   await refreshStats();
@@ -855,11 +874,18 @@ async function deleteAccount(id, label){
 
 function updateAgentGuide(){
   const a = _accounts.find(x=>x.id===_acctId);
-  if(!a){ document.getElementById('agent-guide').style.display='none'; return; }
-  document.getElementById('agent-guide').style.display='block';
-  document.getElementById('guide-acct-id').textContent = a.id;
-  document.getElementById('guide-login').textContent   = a.login;
-  document.getElementById('guide-server').textContent  = a.server;
+  if(!a) return;
+  // MetaApi activo: solo mostrar account ID
+  const agGuide = document.getElementById('agent-guide');
+  if(agGuide) { agGuide.style.display = 'block'; }
+  const elId  = document.getElementById('guide-acct-id');
+  const elId2 = document.getElementById('guide-acct-id2');
+  const elLogin  = document.getElementById('guide-login');
+  const elServer = document.getElementById('guide-server');
+  if(elId)  elId.textContent  = a.id;
+  if(elId2) elId2.textContent = a.id;
+  if(elLogin)  elLogin.textContent  = a.login;
+  if(elServer) elServer.textContent = a.server;
 }
 
 /* ════════════════════════════════════════
